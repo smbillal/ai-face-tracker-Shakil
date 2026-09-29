@@ -2,8 +2,8 @@
 <html lang="bn">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Gesture Browser & Face Tracker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI Gesture Fullscreen Control & Browser</title>
   
   <!-- MediaPipe AI Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -12,159 +12,249 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background-color: #0d1117;
-      color: #ffffff;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body, html {
+      width: 100vw;
       height: 100vh;
       overflow: hidden;
+      background-color: #050508;
+      color: #ffffff;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
-    /* Top: Browser & Keyboard Area */
-    .browser-container {
-      flex: 1;
+    /* Main Container */
+    #app-container {
       display: flex;
       flex-direction: column;
-      background: #161b22;
-      border-bottom: 2px solid #30363d;
-      padding: 8px;
-      gap: 6px;
+      width: 100vw;
+      height: 100vh;
+      position: relative;
     }
 
-    .url-bar-container {
+    /* Top: Browser View (Initially Hidden/0-height) */
+    #browser-section {
+      height: 0%;
+      width: 100%;
+      background: #0f172a;
       display: flex;
+      flex-direction: column;
+      transition: height 0.4s ease-in-out;
+      overflow: hidden;
+      border-bottom: 2px solid #00f0ff;
+    }
+
+    #browser-section.active {
+      height: 65%; /* When browsing, browser takes 65% height */
+    }
+
+    .top-nav {
+      display: flex;
+      padding: 6px;
       gap: 6px;
+      background: #1e293b;
+      align-items: center;
     }
 
-    .url-input {
+    .url-display {
       flex: 1;
-      padding: 8px;
+      padding: 6px 12px;
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #334155;
       border-radius: 6px;
-      border: 1px solid #30363d;
-      background: #0d1117;
-      color: #58a6ff;
-      font-size: 14px;
-      outline: none;
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .btn-go {
-      padding: 8px 14px;
-      background: #238636;
+    .btn-action {
+      padding: 6px 12px;
+      background: #0284c7;
       color: white;
       border: none;
       border-radius: 6px;
       font-weight: bold;
+      font-size: 12px;
       cursor: pointer;
     }
 
-    /* Virtual Keyboard */
+    #webFrame {
+      width: 100%;
+      flex: 1;
+      border: none;
+      background: #ffffff;
+    }
+
+    /* Camera Section: Starts Fullscreen (100%), Shrinks when browsing */
+    #camera-section {
+      height: 100%;
+      width: 100%;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      transition: height 0.4s ease-in-out;
+      background: #000000;
+    }
+
+    #browser-section.active + #camera-section {
+      height: 35%; /* Face screen moves to bottom (35% height) */
+    }
+
+    /* Canvas Screen */
+    canvas {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    /* Floating Digital HUD Box (Over Camera) */
+    .hud-overlay {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 500px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(8px);
+      border: 2px solid #00f0ff;
+      border-radius: 12px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+      z-index: 20;
+    }
+
+    .hud-title {
+      font-size: 11px;
+      color: #38bdf8;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: center;
+    }
+
+    .hud-textbox {
+      width: 100%;
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid #00f0ff;
+      border-radius: 6px;
+      color: #00ffcc;
+      font-size: 15px;
+      font-weight: bold;
+      outline: none;
+      text-align: center;
+    }
+
+    /* Virtual Keyboard in HUD */
     .virtual-keyboard {
       display: flex;
       flex-wrap: wrap;
       gap: 3px;
       justify-content: center;
-      background: #21262d;
-      padding: 6px;
-      border-radius: 6px;
     }
 
     .key-btn {
-      padding: 6px 9px;
-      background: #30363d;
-      color: #f0f6fc;
-      border: 1px solid #484f58;
+      padding: 6px 8px;
+      background: rgba(30, 41, 59, 0.8);
+      color: #ffffff;
+      border: 1px solid #475569;
       border-radius: 4px;
       font-size: 11px;
       font-weight: bold;
-      user-select: none;
+      min-width: 26px;
+      text-align: center;
     }
 
-    .web-frame {
-      flex: 1;
-      width: 100%;
-      border: none;
-      background: #ffffff;
-      border-radius: 6px;
+    .key-btn.action-key {
+      background: #0284c7;
+      border-color: #38bdf8;
     }
 
-    /* Bottom: Camera & Tracker Area */
-    .tracker-container {
-      height: 32vh;
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      background: #000;
-      padding: 4px;
+    .key-btn.go-key {
+      background: #16a34a;
+      border-color: #4ade80;
     }
 
-    #status {
-      position: absolute;
-      top: 6px;
-      background: rgba(0,0,0,0.75);
-      padding: 3px 10px;
-      border-radius: 15px;
-      font-size: 11px;
-      color: #39d353;
-      z-index: 10;
-    }
-
-    canvas {
-      height: 100%;
-      max-width: 100%;
-      border: 2px solid #e3b341;
-      border-radius: 8px;
-      object-fit: contain;
-    }
-
-    /* Gesture Hand Cursor */
+    /* Hand Pointer / Cursor */
     #cursor {
       position: fixed;
-      width: 18px;
-      height: 18px;
-      background: rgba(255, 215, 0, 0.85);
+      width: 20px;
+      height: 20px;
+      background: rgba(0, 240, 255, 0.9);
       border: 2px solid #ffffff;
       border-radius: 50%;
       pointer-events: none;
       z-index: 9999;
       transform: translate(-50%, -50%);
       display: none;
-      transition: background 0.1s, transform 0.1s;
+      box-shadow: 0 0 10px #00f0ff;
+      transition: transform 0.05s linear;
     }
 
     #cursor.clicking {
       background: #ff0055;
+      box-shadow: 0 0 15px #ff0055;
       transform: translate(-50%, -50%) scale(1.4);
+    }
+
+    #status-pill {
+      position: absolute;
+      bottom: 8px;
+      background: rgba(0,0,0,0.7);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 10px;
+      color: #4ade80;
+      border: 1px solid #22c55e;
+      z-index: 20;
     }
   </style>
 </head>
 <body>
 
-  <!-- Hand Gesture Cursor -->
+  <!-- Laser Hand Pointer -->
   <div id="cursor"></div>
 
-  <!-- Top: Virtual Browser & Keyboard -->
-  <div class="browser-container">
-    <div class="url-bar-container">
-      <input type="text" id="urlInput" class="url-input" placeholder="ইশারায় টাইপ করুন..." value="https://www.bing.com">
-      <button class="btn-go" onclick="loadUrl()">Go</button>
+  <div id="app-container">
+    
+    <!-- Top Browser (Expands on Search) -->
+    <div id="browser-section">
+      <div class="top-nav">
+        <div id="urlDisplay" class="url-display">https://duckduckgo.com</div>
+        <button class="btn-action" onclick="closeBrowser()">মাউস/ফুল ক্যামেরা</button>
+      </div>
+      <iframe id="webFrame" src="about:blank"></iframe>
     </div>
 
-    <!-- Virtual Keyboard -->
-    <div class="virtual-keyboard" id="keyboard"></div>
+    <!-- Bottom/Fullscreen Camera Section -->
+    <div id="camera-section">
+      
+      <!-- Digital HUD Overlay Box -->
+      <div class="hud-overlay">
+        <div class="hud-title">⚡ Gesture Digital Input Box</div>
+        <input type="text" id="hudInput" class="hud-textbox" placeholder="ইশারায় টাইপ করুন..." readonly>
+        
+        <div class="virtual-keyboard" id="keyboard"></div>
+      </div>
 
-    <!-- Web View Frame -->
-    <iframe id="webFrame" class="web-frame" src="https://www.bing.com"></iframe>
-  </div>
+      <div id="status-pill">AI ফেস ও ট্র্যাকিং প্রস্তুত হচ্ছে...</div>
+      
+      <video class="input_video" style="display:none;" autoplay muted playsinline></video>
+      <canvas class="output_canvas"></canvas>
+    </div>
 
-  <!-- Bottom: Face & Hand AI Tracker -->
-  <div class="tracker-container">
-    <div id="status">ক্যামেরা ও AI মডেল লোড হচ্ছে...</div>
-    <video class="input_video" style="display:none;" autoplay muted playsinline></video>
-    <canvas class="output_canvas" width="480" height="360"></canvas>
   </div>
 
   <script src="script.js"></script>
