@@ -1,43 +1,72 @@
-// Responsive Dynamic Resolution Detection
 const isMobile = window.innerWidth <= 768;
 
 const videoElement = document.getElementById('webcam');
 const canvasElement = document.getElementById('output_canvas');
 const canvasCtx = canvasElement.getContext('2d');
 const cursor = document.getElementById('ai-cursor');
-const searchInput = document.getElementById('search-input');
+const hudInput = document.getElementById('hudInput');
 const keyboard = document.getElementById('virtual-keyboard');
-const browserView = document.getElementById('browser-view');
-const browserIframe = document.getElementById('browser-iframe');
+const browserSection = document.getElementById('browser-section');
+const urlDisplay = document.getElementById('urlDisplay');
+const webFrame = document.getElementById('webFrame');
 const hudText = document.getElementById('hud-text');
 const statusDot = document.getElementById('status-dot');
 const ownerCard = document.getElementById('owner-card');
 const codeStudioBox = document.getElementById('code-studio-box');
 const codeTypewriter = document.getElementById('code-typewriter');
-const btnClearAll = document.getElementById('btn-clear-all');
-const btnFullCam = document.getElementById('btn-full-cam');
-const btnToggleKbd = document.getElementById('btn-toggle-kbd');
-const btnCodeBox = document.getElementById('btn-code-box');
+const btnQuickClear = document.getElementById('btn-quick-clear');
+const btnCloseBrowser = document.getElementById('btnCloseBrowser');
+const btnCodeToggle = document.getElementById('btn-code-toggle');
 const closeCodeBtn = document.getElementById('close-code-btn');
 const flashOverlay = document.getElementById('flash-overlay');
+const searchTrigger = document.getElementById('search-trigger');
 
 let cursorX = window.innerWidth / 2;
 let cursorY = window.innerHeight / 2;
 
-// Speed & Sensitivity Auto Adjustment for Mobile and PC
-const SPEED_SENSITIVITY = isMobile ? 1.35 : 1.75;
-const SMOOTHING_FACTOR = isMobile ? 0.45 : 0.65;
+// ১.৮৫ গুণ ফুল স্পিড ও অতি-সংবেদনশীল কার্সর ট্র্যাকিং
+const SPEED_SENSITIVITY = isMobile ? 1.85 : 2.3;
+const SMOOTHING_FACTOR = isMobile ? 0.75 : 0.85;
 
 let isPinching = false;
 let lastPinchTime = 0;
 let lastGestureTime = 0;
-const GESTURE_COOLDOWN = 2200;
+const GESTURE_COOLDOWN = 2500;
 
-const sampleCodeSnippet = `<!-- AI Control Project by Mohammad Billal Hossain -->
-<script>
-  const hands = new Hands({ locateFile: (f) => ... });
-  hands.setOptions({ maxNumHands: 1, modelComplexity: ${isMobile ? 0 : 1} });
-<\/script>`;
+// Cyberpunk Digital Click Audio Synthesizer
+function playCyberClickSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.04);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.05);
+    } catch(e) {}
+}
+
+const sourceCodeText = `<!DOCTYPE html>
+<!-- AI Gesture Project Developed by Mohammad Billal Hossain -->
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+</head>
+<body>
+  <script>
+    const hands = new Hands({ locateFile: (f) => ... });
+    hands.setOptions({ maxNumHands: 1, modelComplexity: 0 });
+    hands.onResults((results) => {
+      // High-Speed Finger & Gesture Detection Logic
+    });
+  <\/script>
+</body>
+</html>`;
 
 let typewriterIndex = 0;
 let typewriterInterval = null;
@@ -64,13 +93,13 @@ function startCodeTypewriter() {
     codeTypewriter.innerText = '';
     typewriterIndex = 0;
     typewriterInterval = setInterval(() => {
-        if (typewriterIndex < sampleCodeSnippet.length) {
-            codeTypewriter.innerText += sampleCodeSnippet.charAt(typewriterIndex);
+        if (typewriterIndex < sourceCodeText.length) {
+            codeTypewriter.innerText += sourceCodeText.charAt(typewriterIndex);
             typewriterIndex++;
         } else {
             clearInterval(typewriterInterval);
         }
-    }, 20);
+    }, 15);
 }
 
 function hideCodeBox() {
@@ -79,23 +108,26 @@ function hideCodeBox() {
 }
 
 function clearAllScreenObjects() {
-    browserView.classList.remove('active');
-    browserIframe.src = "about:blank";
+    browserSection.classList.remove('active');
+    webFrame.src = "about:blank";
     keyboard.classList.remove('visible');
     ownerCard.classList.remove('active');
     hideCodeBox();
     hudText.innerText = "স্ক্রিন ক্লিয়ার করা হয়েছে!";
 }
 
-btnClearAll.addEventListener('click', clearAllScreenObjects);
-btnFullCam.addEventListener('click', clearAllScreenObjects);
-btnToggleKbd.addEventListener('click', () => keyboard.classList.toggle('visible'));
-btnCodeBox.addEventListener('click', () => {
+btnQuickClear.addEventListener('click', clearAllScreenObjects);
+btnCloseBrowser.addEventListener('click', () => {
+    browserSection.classList.remove('active');
+    webFrame.src = "about:blank";
+});
+btnCodeToggle.addEventListener('click', () => {
     if (codeStudioBox.classList.contains('active')) hideCodeBox();
     else startCodeTypewriter();
 });
 closeCodeBtn.addEventListener('click', hideCodeBox);
 
+// ৪-আঙুলের স্ক্রিনশট ফাংশন
 function takeScreenShot() {
     hudText.innerText = "📸 স্ক্রিনশট নেওয়া হচ্ছে...";
     flashOverlay.style.opacity = '0.9';
@@ -106,21 +138,23 @@ function takeScreenShot() {
         link.download = 'gesture-screenshot.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-        hudText.innerText = "✅ স্ক্রিনশট সম্পন্ন!";
-    }).catch(() => hudText.innerText = "❌ স্ক্রিনশট নেওয়া যায়নি");
+        hudText.innerText = "✅ স্ক্রিনশট সফলভাবে ক্যাপচার হয়েছে!";
+    }).catch(() => hudText.innerText = "❌ স্ক্রিনশট ব্যর্থ হয়েছে");
 }
 
+// ১-আঙুল (Thumb Up) ডেভেলপার নাম ও ভয়েস
 function showOwnerProfile() {
     ownerCard.classList.add('active');
     hudText.innerText = "👤 Developer: Mohammad Billal Hossain";
     speakText("This site was created by Mohammad Billal Hossain");
-    setTimeout(() => ownerCard.classList.remove('active'), 4500);
+    setTimeout(() => ownerCard.classList.remove('active'), 5000);
 }
 
+// রিয়েল-টাইম সার্চ প্রসেসিং
 function performSearch() {
-    const query = searchInput.value.trim();
+    const query = hudInput.value.trim();
     if (!query) return;
-    hudText.innerText = "সার্চ: " + query;
+
     let targetUrl = query;
     if (!query.startsWith('http://') && !query.startsWith('https://')) {
         if (query.includes('.') && !query.includes(' ')) {
@@ -129,26 +163,32 @@ function performSearch() {
             targetUrl = 'https://www.bing.com/search?q=' + encodeURIComponent(query);
         }
     }
-    browserIframe.src = targetUrl;
-    browserView.classList.add('active');
+
+    urlDisplay.innerText = targetUrl;
+    webFrame.src = targetUrl;
+    browserSection.classList.add('active');
     keyboard.classList.remove('visible');
+    hudText.innerText = "সার্চ শুরু হয়েছে...";
 }
 
+// কিবোর্ড প্রসেসিং
 function handleKeyPress(keyElement) {
+    playCyberClickSound();
     const char = keyElement.getAttribute('data-key');
     const action = keyElement.getAttribute('data-action');
 
-    if (char) searchInput.value += char;
-    else if (action === 'backspace') searchInput.value = searchInput.value.slice(0, -1);
-    else if (action === 'clear') searchInput.value = '';
-    else if (action === 'space') searchInput.value += ' ';
+    if (char) hudInput.value += char;
+    else if (action === 'backspace') hudInput.value = hudInput.value.slice(0, -1);
+    else if (action === 'clear') hudInput.value = '';
+    else if (action === 'space') hudInput.value += ' ';
     else if (action === 'search') performSearch();
-    else if (action === 'close') keyboard.classList.remove('visible');
+    else if (action === 'hide') keyboard.classList.remove('visible');
 
     keyElement.classList.add('hover-active');
     setTimeout(() => keyElement.classList.remove('hover-active'), 150);
 }
 
+// কার্সর ইন্টারঅ্যাকশন
 function interactAtCursor(x, y, triggerClick) {
     cursor.style.left = `${x}px`;
     cursor.style.top = `${y}px`;
@@ -157,9 +197,19 @@ function interactAtCursor(x, y, triggerClick) {
     const targetEl = document.elementFromPoint(x, y);
     cursor.style.display = 'block';
 
-    document.querySelectorAll('.key, .nav-btn').forEach(el => el.classList.remove('hover-active'));
+    document.querySelectorAll('.key, .nav-btn, .clear-screen-btn').forEach(el => el.classList.remove('hover-active'));
 
     if (targetEl) {
+        // অটো কিবোর্ড পপ-আপ সার্চ বারে হোভার করলে
+        if (targetEl.closest('#search-trigger')) {
+            keyboard.classList.add('visible');
+        }
+
+        // কুইক সাইড ক্রস বোতামে কার্সর রাখলেই স্ক্রিন ক্লিয়ার
+        if (targetEl.closest('#btn-quick-clear')) {
+            clearAllScreenObjects();
+        }
+
         const keyEl = targetEl.closest('.key');
         const btnEl = targetEl.closest('.nav-btn');
 
@@ -168,16 +218,18 @@ function interactAtCursor(x, y, triggerClick) {
 
         if (triggerClick) {
             if (keyEl) handleKeyPress(keyEl);
-            else if (btnEl === btnFullCam) clearAllScreenObjects();
-            else if (btnEl === btnToggleKbd) keyboard.classList.toggle('visible');
-            else if (btnEl === btnCodeBox) {
+            else if (btnEl === btnCodeToggle) {
                 if (codeStudioBox.classList.contains('active')) hideCodeBox();
                 else startCodeTypewriter();
+            } else if (btnEl === btnCloseBrowser) {
+                browserSection.classList.remove('active');
+                webFrame.src = "about:blank";
             }
         }
     }
 }
 
+// MediaPipe ট্র্যাকিং লুপ
 function onResults(results) {
     resizeCanvas();
     canvasCtx.save();
@@ -210,36 +262,36 @@ function onResults(results) {
         const middleOpen = landmarks[12].y < landmarks[10].y;
         const ringOpen = landmarks[16].y < landmarks[14].y;
         const pinkyOpen = landmarks[20].y < landmarks[18].y;
-        const thumbOpen = Math.abs(landmarks[4].x - landmarks[2].x) > 0.05;
+        const thumbUpOnly = landmarks[4].y < landmarks[3].y && !indexOpen && !middleOpen && !ringOpen && !pinkyOpen;
 
         const now = Date.now();
 
-        // Gesture 1: Screenshot (4 fingers)
-        if (indexOpen && middleOpen && ringOpen && pinkyOpen && !thumbOpen) {
+        // জেসচার ১: ৪ আঙুলে স্ক্রিনশট (তর্জনী, মধ্যমা, অনামিকা, কনিষ্ঠা)
+        if (indexOpen && middleOpen && ringOpen && pinkyOpen) {
             if (now - lastGestureTime > GESTURE_COOLDOWN) {
                 lastGestureTime = now;
                 takeScreenShot();
             }
         }
 
-        // Gesture 2: Developer Profile (Thumb up only)
-        if (!indexOpen && !middleOpen && !ringOpen && !pinkyOpen && (landmarks[4].y < landmarks[3].y)) {
+        // জেসচার ২: ১ বৃদ্ধা আঙুল (Thumb Up) ডেভেলপার নাম ও ভয়েস
+        if (thumbUpOnly) {
             if (now - lastGestureTime > GESTURE_COOLDOWN) {
                 lastGestureTime = now;
                 showOwnerProfile();
             }
         }
 
-        // Pinch Click
+        // চিমটি কাটা (Pinch Click)
         const distance = Math.hypot(
             (indexTip.x - thumbTip.x) * screenW,
             (indexTip.y - thumbTip.y) * screenH
         );
 
         let triggerPinch = false;
-        if (distance < (isMobile ? 30 : 40)) {
+        if (distance < (isMobile ? 32 : 45)) {
             cursor.classList.add('pinched');
-            if (!isPinching && (now - lastPinchTime > 250)) {
+            if (!isPinching && (now - lastPinchTime > 220)) {
                 isPinching = true;
                 triggerPinch = true;
                 lastPinchTime = now;
@@ -251,25 +303,25 @@ function onResults(results) {
 
         interactAtCursor(cursorX, cursorY, triggerPinch);
 
-        // Landmarks Rendering
+        // ক্যানভাসে হাতের লাইন অঙ্কন
         drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: 'rgba(0, 243, 255, 0.4)', lineWidth: 1.5});
         drawLandmarks(canvasCtx, [landmarks[8], landmarks[4]], {color: '#ff0055', lineWidth: 2, radius: 3});
 
     } else {
         statusDot.classList.remove('active');
-        hudText.innerText = "হাত ট্র্যাকিংয়ের জন্য তৈরি...";
+        hudText.innerText = "হাত ট্র্যাকিংয়ের জন্য ক্যামেরা চালু আছে...";
     }
     canvasCtx.restore();
 }
 
-// MediaPipe Initialization
+// MediaPipe Hands সেটআপ (ফুল স্পিড অপটিমাইজড)
 const hands = new Hands({
     locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
 
 hands.setOptions({
     maxNumHands: 1,
-    modelComplexity: isMobile ? 0 : 1,
+    modelComplexity: 0,
     minDetectionConfidence: 0.5,
     minTrackingConfidence: 0.5
 });
@@ -280,12 +332,12 @@ const camera = new Camera(videoElement, {
     onFrame: async () => {
         await hands.send({image: videoElement});
     },
-    width: isMobile ? 640 : 1280,
-    height: isMobile ? 480 : 720
+    width: isMobile ? 320 : 640,
+    height: isMobile ? 240 : 480
 });
 
 camera.start().then(() => {
-    hudText.innerText = "ক্যামেরা রেডি! হাত তুলে নিয়ন্ত্রণ করুন।";
+    hudText.innerText = "ক্যামেরা প্রস্তুত! ইশারায় নিয়ন্ত্রণ করুন।";
 });
 
 window.addEventListener('mousemove', (e) => {
