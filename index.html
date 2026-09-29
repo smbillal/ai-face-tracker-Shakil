@@ -3,102 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Gesture Browser & Code Studio - Mohammad Billal Hossain</title>
+    <title>AI Gesture Fullscreen Control & Ultra-Fast Browser</title>
     
-    <!-- CSS Link -->
+    <!-- CSS File -->
     <link rel="stylesheet" href="style.css">
 
-    <!-- MediaPipe & External Libraries -->
+    <!-- MediaPipe AI & External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
+    <!-- Screenshot Flash Overlay -->
     <div id="flash-overlay"></div>
 
     <div id="app-container">
-        <!-- Top Nav Bar -->
-        <div class="top-nav">
-            <div class="search-bar-container" id="search-box-trigger">
-                <svg class="google-icon" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                </svg>
-                <input type="text" class="search-input" id="search-input" placeholder="সার্চ টাইপ করুন..." readonly>
+        
+        <!-- Top Half: Browser View -->
+        <div id="browser-section">
+            <div class="top-nav">
+                <div class="url-display" id="urlDisplay">https://www.bing.com</div>
+                <button class="nav-btn red-btn" id="btnCloseBrowser">✕ বন্ধ করুন</button>
             </div>
-            <button class="nav-btn" id="btn-toggle-kbd">⌨️ কিবোর্ড</button>
-            <button class="nav-btn" id="btn-code-box">💻 কোড</button>
-            <button class="nav-btn red-btn" id="btn-full-cam">🎥 রিসেট</button>
+            <iframe id="webFrame" src="about:blank"></iframe>
         </div>
 
-        <div class="clear-screen-btn" id="btn-clear-all" title="স্ক্রিন ক্লিয়ার">✕</div>
+        <!-- Main Camera Section -->
+        <div id="camera-section">
+            
+            <!-- Top Controls (Fixed Search Bar & Buttons) -->
+            <div class="top-bar">
+                <div class="search-bar-container" id="search-trigger">
+                    <svg class="google-icon" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                    </svg>
+                    <input type="text" id="hudInput" class="search-input" placeholder="সার্চ বক্সে পয়েন্ট করুন..." readonly>
+                </div>
+                <button class="nav-btn" id="btn-code-toggle">💻 কোড</button>
+            </div>
 
-        <div id="browser-view">
-            <iframe id="browser-iframe" src="about:blank"></iframe>
-        </div>
+            <!-- Quick Object Clear Button -->
+            <div class="clear-screen-btn" id="btn-quick-clear" title="স্ক্রিন ক্লিয়ার">✕</div>
 
-        <div id="camera-view">
             <video id="webcam" autoplay playsinline muted></video>
             <canvas id="output_canvas"></canvas>
 
-            <!-- Virtual Digital Keyboard -->
+            <!-- Floating Glass Keyboard (Hides by default, Pop-up on Search Bar Hover) -->
             <div id="virtual-keyboard">
                 <div class="keyboard-row">
-                    <div class="key" data-key="1">1</div><div class="key" data-key="2">2</div><div class="key" data-key="3">3</div>
-                    <div class="key" data-key="4">4</div><div class="key" data-key="5">5</div><div class="key" data-key="6">6</div>
-                    <div class="key" data-key="7">7</div><div class="key" data-key="8">8</div><div class="key" data-key="9">9</div>
-                    <div class="key" data-key="0">0</div><div class="key red-key wide-key" data-action="backspace">⌫</div>
+                    <div class="key blue-key" data-key="1">1</div><div class="key blue-key" data-key="2">2</div><div class="key blue-key" data-key="3">3</div>
+                    <div class="key blue-key" data-key="4">4</div><div class="key blue-key" data-key="5">5</div><div class="key blue-key" data-key="6">6</div>
+                    <div class="key blue-key" data-key="7">7</div><div class="key blue-key" data-key="8">8</div><div class="key blue-key" data-key="9">9</div>
+                    <div class="key blue-key" data-key="0">0</div><div class="key red-key wide-key" data-action="backspace">⌫</div>
                 </div>
                 <div class="keyboard-row">
-                    <div class="key" data-key="Q">Q</div><div class="key" data-key="W">W</div><div class="key" data-key="E">E</div>
-                    <div class="key" data-key="R">R</div><div class="key" data-key="T">T</div><div class="key" data-key="Y">Y</div>
-                    <div class="key" data-key="U">U</div><div class="key" data-key="I">I</div><div class="key" data-key="O">O</div>
-                    <div class="key" data-key="P">P</div><div class="key red-key" data-action="clear">✖</div>
+                    <div class="key blue-key" data-key="Q">Q</div><div class="key blue-key" data-key="W">W</div><div class="key blue-key" data-key="E">E</div>
+                    <div class="key blue-key" data-key="R">R</div><div class="key blue-key" data-key="T">T</div><div class="key blue-key" data-key="Y">Y</div>
+                    <div class="key blue-key" data-key="U">U</div><div class="key blue-key" data-key="I">I</div><div class="key blue-key" data-key="O">O</div>
+                    <div class="key blue-key" data-key="P">P</div><div class="key red-key" data-action="clear">✖</div>
                 </div>
                 <div class="keyboard-row">
-                    <div class="key" data-key="A">A</div><div class="key" data-key="S">S</div><div class="key" data-key="D">D</div>
-                    <div class="key" data-key="F">F</div><div class="key" data-key="G">G</div><div class="key" data-key="H">H</div>
-                    <div class="key" data-key="J">J</div><div class="key" data-key="K">K</div><div class="key" data-key="L">L</div>
-                    <div class="key wide-key" data-action="search" style="background: rgba(0,255,136,0.2); border-color: #00ff88; color:#00ff88;">🔍</div>
+                    <div class="key blue-key" data-key="A">A</div><div class="key blue-key" data-key="S">S</div><div class="key blue-key" data-key="D">D</div>
+                    <div class="key blue-key" data-key="F">F</div><div class="key blue-key" data-key="G">G</div><div class="key blue-key" data-key="H">H</div>
+                    <div class="key blue-key" data-key="J">J</div><div class="key blue-key" data-key="K">K</div><div class="key blue-key" data-key="L">L</div>
+                    <div class="key green-key wide-key" data-action="search">🔍 SEARCH</div>
                 </div>
                 <div class="keyboard-row">
-                    <div class="key" data-key="Z">Z</div><div class="key" data-key="X">X</div><div class="key" data-key="C">C</div>
-                    <div class="key" data-key="V">V</div><div class="key" data-key="B">B</div><div class="key" data-key="N">N</div>
-                    <div class="key" data-key="M">M</div><div class="key" data-key=".">.</div>
-                    <div class="key space-key" data-action="space">SPACE</div>
-                    <div class="key red-key" data-action="close">✕</div>
+                    <div class="key blue-key" data-key="Z">Z</div><div class="key blue-key" data-key="X">X</div><div class="key blue-key" data-key="C">C</div>
+                    <div class="key blue-key" data-key="V">V</div><div class="key blue-key" data-key="B">B</div><div class="key blue-key" data-key="N">N</div>
+                    <div class="key blue-key" data-key="M">M</div><div class="key blue-key" data-key=".">.</div>
+                    <div class="key blue-key space-key" data-action="space">SPACE</div>
+                    <div class="key red-key" data-action="hide">✕ HIDE</div>
                 </div>
             </div>
 
-            <!-- Profile Popup Card -->
+            <!-- Profile Card (Single Thumb Gesture) -->
             <div id="owner-card">
-                <div class="owner-title">⚡ Website Creator ⚡</div>
+                <div class="owner-title">⚡ WEBSITE CREATOR ⚡</div>
                 <div class="owner-name">Mohammad Billal Hossain</div>
-                <div class="owner-sub">AI Control Interface</div>
+                <div class="owner-sub">AI Gesture Interface Developer</div>
             </div>
 
-            <!-- Code Box -->
+            <!-- Neon Blue Code Studio (Typewriter) -->
             <div id="code-studio-box">
                 <div class="code-header">
-                    <span>💻 Source Code</span>
+                    <span>💻 Source Code Studio (HTML & JS)</span>
                     <span style="cursor:pointer;" id="close-code-btn">✕</span>
                 </div>
                 <div class="code-content" id="code-typewriter"></div>
             </div>
 
+            <!-- HUD Status -->
             <div class="hud-status">
                 <div class="status-dot" id="status-dot"></div>
-                <span id="hud-text">ক্যামেরা কানেক্ট হচ্ছে...</span>
+                <span id="hud-text">এআই ট্র্যাকিং প্রস্তুত হচ্ছে...</span>
             </div>
         </div>
     </div>
 
+    <!-- Ultra-Fast Laser Cursor -->
     <div id="ai-cursor"></div>
 
-    <!-- JavaScript File Link -->
+    <!-- JavaScript Link -->
     <script src="script.js"></script>
 </body>
-  </html>
+    </html>
