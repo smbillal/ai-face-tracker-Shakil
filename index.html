@@ -2,111 +2,595 @@
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Gesture Fullscreen Control & Ultra-Fast Browser</title>
-    
-    <!-- CSS File Link -->
-    <link rel="stylesheet" href="./style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Gesture Control System</title>
 
-    <!-- MediaPipe AI Libraries -->
+    <!-- MediaPipe & HTML2Canvas CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            font-family: sans-serif;
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #000;
+            position: fixed;
+        }
+
+        /* Container Layout */
+        #main-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Browser View */
+        #browser-view {
+            height: 0vh;
+            width: 100%;
+            background: #111;
+            transition: height 0.3s ease;
+            border-bottom: 2px solid #00f3ff;
+            display: flex;
+            flex-direction: column;
+            z-index: 100;
+        }
+
+        #browser-view.active {
+            height: 50vh;
+        }
+
+        .browser-bar {
+            display: flex;
+            padding: 8px;
+            background: #000;
+            gap: 10px;
+        }
+
+        .browser-url {
+            flex: 1;
+            background: #222;
+            color: #00f3ff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+
+        .close-btn {
+            background: #ff0055;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #webFrame {
+            flex: 1;
+            border: none;
+            background: #fff;
+        }
+
+        /* Camera Feed & Canvas */
+        #cam-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        video#webcam {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1); /* মিরর ভিউ ঠিক করা */
+        }
+
+        canvas#output_canvas {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        /* Top Header & Search Bar */
+        .top-ui {
+            position: absolute;
+            top: 10px;
+            left: 5%;
+            width: 90%;
+            display: flex;
+            gap: 8px;
+            z-index: 200;
+        }
+
+        .search-box {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #00f3ff;
+            border-radius: 20px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .code-btn {
+            background: rgba(0, 243, 255, 0.2);
+            border: 2px solid #00f3ff;
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Quick Clear Side Button */
+        .side-clear {
+            position: absolute;
+            top: 70px;
+            right: 15px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 0, 85, 0.8);
+            border: 2px solid #fff;
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: bold;
+            z-index: 200;
+            cursor: pointer;
+        }
+
+        /* Virtual Keyboard */
+        #keyboard-panel {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95%;
+            max-width: 600px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 2px solid #00f3ff;
+            border-radius: 12px;
+            padding: 8px;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 300;
+        }
+
+        #keyboard-panel.show {
+            display: flex;
+        }
+
+        .kb-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .key-btn {
+            flex: 1;
+            height: 40px;
+            background: rgba(0, 243, 255, 0.1);
+            border: 1px solid #00f3ff;
+            color: #00f3ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .key-btn.red {
+            background: rgba(255, 0, 85, 0.2);
+            border-color: #ff0055;
+            color: #ff0055;
+        }
+
+        .key-btn.green {
+            background: rgba(0, 255, 136, 0.2);
+            border-color: #00ff88;
+            color: #00ff88;
+        }
+
+        /* Profile Card */
+        #profile-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            max-width: 320px;
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid #00f3ff;
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            display: none;
+            z-index: 500;
+            box-shadow: 0 0 20px #00f3ff;
+        }
+
+        #profile-card.show {
+            display: block;
+        }
+
+        /* Code Studio Box */
+        #code-box {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            width: 90%;
+            max-width: 380px;
+            height: 180px;
+            background: rgba(5, 10, 20, 0.95);
+            border: 2px solid #00f3ff;
+            border-radius: 10px;
+            padding: 10px;
+            display: none;
+            flex-direction: column;
+            z-index: 400;
+        }
+
+        #code-box.show {
+            display: flex;
+        }
+
+        #code-text {
+            flex: 1;
+            color: #00f3ff;
+            font-family: monospace;
+            font-size: 11px;
+            white-space: pre-wrap;
+            overflow-y: auto;
+        }
+
+        /* AI Cursor */
+        #cursor {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00f3ff;
+            background: rgba(0, 243, 255, 0.5);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+        }
+
+        #cursor.click {
+            background: #ff0055;
+            border-color: #ff0055;
+            transform: translate(-50%, -50%) scale(0.8);
+        }
+
+        #flash {
+            position: fixed;
+            inset: 0;
+            background: #fff;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10000;
+            transition: opacity 0.2s;
+        }
+    </style>
 </head>
 <body>
 
-    <div id="flash-overlay"></div>
+    <div id="flash"></div>
 
-    <div id="app-container">
-        
-        <!-- Top Half Browser View -->
-        <div id="browser-section">
-            <div class="top-nav">
-                <div class="url-display" id="urlDisplay">https://www.bing.com</div>
-                <button class="nav-btn red-btn" id="btnCloseBrowser">✕ বন্ধ করুন</button>
+    <div id="main-wrapper">
+        <!-- Top Browser View -->
+        <div id="browser-view">
+            <div class="browser-bar">
+                <div class="browser-url" id="url-text">https://www.bing.com</div>
+                <button class="close-btn" id="close-browser">✕ বন্ধ করুন</button>
             </div>
             <iframe id="webFrame" src="about:blank"></iframe>
         </div>
 
         <!-- Camera Section -->
-        <div id="camera-section">
-            
-            <!-- Top Bar -->
-            <div class="top-bar">
-                <div class="search-bar-container" id="search-trigger">
-                    <svg class="google-icon" viewBox="0 0 24 24">
-                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-                    </svg>
-                    <input type="text" id="hudInput" class="search-input" placeholder="সার্চ বক্সে পয়েন্ট করুন..." readonly>
+        <div id="cam-container">
+            <div class="top-ui">
+                <div class="search-box" id="search-trigger">
+                    <input type="text" id="searchInput" placeholder="সার্চ বক্সে পয়েন্ট করুন..." readonly>
                 </div>
-                <button class="nav-btn" id="btn-code-toggle">💻 HTML & JS কোড</button>
+                <button class="code-btn" id="toggle-code">💻 কোড দেখুন</button>
             </div>
 
-            <!-- Side Quick Clear Button -->
-            <div class="clear-screen-btn" id="btn-quick-clear" title="স্ক্রিন ক্লিয়ার">✕</div>
+            <div class="side-clear" id="btn-clear">✕</div>
 
             <video id="webcam" autoplay playsinline muted></video>
             <canvas id="output_canvas"></canvas>
 
-            <!-- Pop-up Floating Keyboard -->
-            <div id="virtual-keyboard">
-                <div class="keyboard-row">
-                    <div class="key blue-key" data-key="1">1</div><div class="key blue-key" data-key="2">2</div><div class="key blue-key" data-key="3">3</div>
-                    <div class="key blue-key" data-key="4">4</div><div class="key blue-key" data-key="5">5</div><div class="key blue-key" data-key="6">6</div>
-                    <div class="key blue-key" data-key="7">7</div><div class="key blue-key" data-key="8">8</div><div class="key blue-key" data-key="9">9</div>
-                    <div class="key blue-key" data-key="0">0</div><div class="key red-key wide-key" data-action="backspace">⌫</div>
+            <!-- Virtual Keyboard -->
+            <div id="keyboard-panel">
+                <div class="kb-row">
+                    <div class="key-btn" data-key="1">1</div><div class="key-btn" data-key="2">2</div><div class="key-btn" data-key="3">3</div>
+                    <div class="key-btn" data-key="4">4</div><div class="key-btn" data-key="5">5</div><div class="key-btn" data-key="6">6</div>
+                    <div class="key-btn" data-key="7">7</div><div class="key-btn" data-key="8">8</div><div class="key-btn" data-key="9">9</div>
+                    <div class="key-btn" data-key="0">0</div><div class="key-btn red" data-act="back">⌫</div>
                 </div>
-                <div class="keyboard-row">
-                    <div class="key blue-key" data-key="Q">Q</div><div class="key blue-key" data-key="W">W</div><div class="key blue-key" data-key="E">E</div>
-                    <div class="key blue-key" data-key="R">R</div><div class="key blue-key" data-key="T">T</div><div class="key blue-key" data-key="Y">Y</div>
-                    <div class="key blue-key" data-key="U">U</div><div class="key blue-key" data-key="I">I</div><div class="key blue-key" data-key="O">O</div>
-                    <div class="key blue-key" data-key="P">P</div><div class="key red-key" data-action="clear">✖</div>
+                <div class="kb-row">
+                    <div class="key-btn" data-key="Q">Q</div><div class="key-btn" data-key="W">W</div><div class="key-btn" data-key="E">E</div>
+                    <div class="key-btn" data-key="R">R</div><div class="key-btn" data-key="T">T</div><div class="key-btn" data-key="Y">Y</div>
+                    <div class="key-btn" data-key="U">U</div><div class="key-btn" data-key="I">I</div><div class="key-btn" data-key="O">O</div>
+                    <div class="key-btn" data-key="P">P</div><div class="key-btn red" data-act="clear">✖</div>
                 </div>
-                <div class="keyboard-row">
-                    <div class="key blue-key" data-key="A">A</div><div class="key blue-key" data-key="S">S</div><div class="key blue-key" data-key="D">D</div>
-                    <div class="key blue-key" data-key="F">F</div><div class="key blue-key" data-key="G">G</div><div class="key blue-key" data-key="H">H</div>
-                    <div class="key blue-key" data-key="J">J</div><div class="key blue-key" data-key="K">K</div><div class="key blue-key" data-key="L">L</div>
-                    <div class="key green-key wide-key" data-action="search">🔍 SEARCH</div>
+                <div class="kb-row">
+                    <div class="key-btn" data-key="A">A</div><div class="key-btn" data-key="S">S</div><div class="key-btn" data-key="D">D</div>
+                    <div class="key-btn" data-key="F">F</div><div class="key-btn" data-key="G">G</div><div class="key-btn" data-key="H">H</div>
+                    <div class="key-btn" data-key="J">J</div><div class="key-btn" data-key="K">K</div><div class="key-btn" data-key="L">L</div>
+                    <div class="key-btn green" data-act="search">🔍 SEARCH</div>
                 </div>
-                <div class="keyboard-row">
-                    <div class="key blue-key" data-key="Z">Z</div><div class="key blue-key" data-key="X">X</div><div class="key blue-key" data-key="C">C</div>
-                    <div class="key blue-key" data-key="V">V</div><div class="key blue-key" data-key="B">B</div><div class="key blue-key" data-key="N">N</div>
-                    <div class="key blue-key" data-key="M">M</div><div class="key blue-key" data-key=".">.</div>
-                    <div class="key blue-key space-key" data-action="space">SPACE</div>
-                    <div class="key red-key" data-action="hide">✕ HIDE</div>
+                <div class="kb-row">
+                    <div class="key-btn" data-key="Z">Z</div><div class="key-btn" data-key="X">X</div><div class="key-btn" data-key="C">C</div>
+                    <div class="key-btn" data-key="V">V</div><div class="key-btn" data-key="B">B</div><div class="key-btn" data-key="N">N</div>
+                    <div class="key-btn" data-key="M">M</div><div class="key-btn" data-act="space">SPACE</div>
+                    <div class="key-btn red" data-act="hide">✕ HIDE</div>
                 </div>
             </div>
 
-            <!-- Profile Card -->
-            <div id="owner-card">
-                <div class="owner-title">⚡ WEBSITE CREATOR ⚡</div>
-                <div class="owner-name">Mohammad Billal Hossain</div>
-                <div class="owner-sub">AI Gesture Interface Developer</div>
+            <!-- Profile Popup -->
+            <div id="profile-card">
+                <h3 style="color:#00f3ff;">Mohammad Billal Hossain</h3>
+                <p style="color:#fff; font-size:12px; margin-top:5px;">Site Developer & Creator</p>
             </div>
 
-            <!-- Code Studio (Typewriter Style) -->
-            <div id="code-studio-box">
-                <div class="code-header">
-                    <span>💻 Source Code Studio (HTML & JS)</span>
-                    <span style="cursor:pointer;" id="close-code-btn">✕</span>
+            <!-- Code Studio Box -->
+            <div id="code-box">
+                <div style="color:#00f3ff; font-weight:bold; font-size:12px; border-bottom:1px solid #00f3ff; padding-bottom:4px;">
+                    💻 Source Code (HTML & JS)
                 </div>
-                <div class="code-content" id="code-typewriter"></div>
-            </div>
-
-            <!-- Status HUD -->
-            <div class="hud-status">
-                <div class="status-dot" id="status-dot"></div>
-                <span id="hud-text">এআই হ্যান্ড ট্র্যাকিং চালু হচ্ছে...</span>
+                <div id="code-text"></div>
             </div>
         </div>
     </div>
 
     <!-- Laser Cursor -->
-    <div id="ai-cursor"></div>
+    <div id="cursor"></div>
 
-    <script src="./script.js"></script>
+    <script>
+        const videoElement = document.getElementById('webcam');
+        const canvasElement = document.getElementById('output_canvas');
+        const canvasCtx = canvasElement.getContext('2d');
+        const cursor = document.getElementById('cursor');
+        const searchInput = document.getElementById('searchInput');
+        const keyboard = document.getElementById('keyboard-panel');
+        const browserView = document.getElementById('browser-view');
+        const webFrame = document.getElementById('webFrame');
+        const urlText = document.getElementById('url-text');
+        const profileCard = document.getElementById('profile-card');
+        const codeBox = document.getElementById('code-box');
+        const codeText = document.getElementById('code-text');
+        const flash = document.getElementById('flash');
+
+        let curX = window.innerWidth / 2;
+        let curY = window.innerHeight / 2;
+        const SPEED = 2.2; // কার্সরের ফুল স্পিড
+        let isPinching = false;
+        let lastActionTime = 0;
+
+        const sampleCode = `<!DOCTYPE html>
+<!-- Created by Mohammad Billal Hossain -->
+<html>
+<head>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"><\/script>
+</head>
+<body>
+  <script>
+    // Pure HTML & JS Hand Tracking Logic
+  <\/script>
+</body>
+</html>`;
+
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const msg = new SpeechSynthesisUtterance(text);
+                msg.lang = 'en-US';
+                window.speechSynthesis.speak(msg);
+            }
+        }
+
+        // টাইপরাইটার কোড ইফেক্ট
+        let typeIdx = 0;
+        let typeTimer = null;
+        function showCodeTypewriter() {
+            codeBox.classList.add('show');
+            codeText.innerText = '';
+            typeIdx = 0;
+            clearInterval(typeTimer);
+            typeTimer = setInterval(() => {
+                if (typeIdx < sampleCode.length) {
+                    codeText.innerText += sampleCode.charAt(typeIdx);
+                    typeIdx++;
+                } else clearInterval(typeTimer);
+            }, 20);
+        }
+
+        // স্ক্রিন ক্লিয়ার
+        function clearScreen() {
+            browserView.classList.remove('active');
+            keyboard.classList.remove('show');
+            profileCard.classList.remove('show');
+            codeBox.classList.remove('show');
+            webFrame.src = "about:blank";
+        }
+
+        document.getElementById('btn-clear').addEventListener('click', clearScreen);
+        document.getElementById('close-browser').addEventListener('click', () => browserView.classList.remove('active'));
+        document.getElementById('toggle-code').addEventListener('click', () => {
+            if (codeBox.classList.contains('show')) codeBox.classList.remove('show');
+            else showCodeTypewriter();
+        });
+
+        // ৪ আঙুলে স্ক্রিনশট
+        function captureScreenshot() {
+            flash.style.opacity = '1';
+            setTimeout(() => flash.style.opacity = '0', 200);
+            html2canvas(document.body).then(canvas => {
+                const a = document.createElement('a');
+                a.download = 'screenshot.png';
+                a.href = canvas.toDataURL();
+                a.click();
+            });
+        }
+
+        // ১ আঙুল দেখিয়ে নাম ও সাউন্ড
+        function showProfile() {
+            profileCard.classList.add('show');
+            speak("This site was created by Mohammad Billal Hossain");
+            setTimeout(() => profileCard.classList.remove('show'), 4000);
+        }
+
+        // লাইভ সার্চ
+        function doSearch() {
+            const val = searchInput.value.trim();
+            if (!val) return;
+            let url = val.includes('.') ? (val.startsWith('http') ? val : 'https://' + val) : 'https://www.bing.com/search?q=' + encodeURIComponent(val);
+            urlText.innerText = url;
+            webFrame.src = url;
+            browserView.classList.add('active');
+            keyboard.classList.remove('show');
+        }
+
+        function clickKey(el) {
+            const key = el.getAttribute('data-key');
+            const act = el.getAttribute('data-act');
+            if (key) searchInput.value += key;
+            if (act === 'back') searchInput.value = searchInput.value.slice(0, -1);
+            if (act === 'clear') searchInput.value = '';
+            if (act === 'space') searchInput.value += ' ';
+            if (act === 'search') doSearch();
+            if (act === 'hide') keyboard.classList.remove('show');
+        }
+
+        function handlePointer(x, y, isClick) {
+            cursor.style.left = x + 'px';
+            cursor.style.top = y + 'px';
+
+            cursor.style.display = 'none';
+            const target = document.elementFromPoint(x, y);
+            cursor.style.display = 'block';
+
+            if (target) {
+                if (target.closest('#search-trigger')) keyboard.classList.add('show');
+                if (target.closest('#btn-clear')) clearScreen();
+
+                const btn = target.closest('.key-btn');
+                if (isClick && btn) clickKey(btn);
+            }
+        }
+
+        function onResults(results) {
+            canvasElement.width = videoElement.clientWidth;
+            canvasElement.height = videoElement.clientHeight;
+            canvasCtx.save();
+            canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+                const pts = results.multiHandLandmarks[0];
+                const w = window.innerWidth;
+                const h = window.innerHeight;
+
+                // হাই স্পিড কার্সর হিসাব
+                const rawX = (1 - pts[8].x) * w;
+                const rawY = pts[8].y * h;
+                curX += (rawX - curX) * 0.8;
+                curY += (rawY - curY) * 0.8;
+
+                // জেসচার ট্র্যাকিং
+                const iOpen = pts[8].y < pts[6].y;
+                const mOpen = pts[12].y < pts[10].y;
+                const rOpen = pts[16].y < pts[14].y;
+                const pOpen = pts[20].y < pts[18].y;
+                const thumbUp = pts[4].y < pts[3].y && !iOpen && !mOpen && !rOpen && !pOpen;
+
+                const now = Date.now();
+
+                // ৪ আঙুল = স্ক্রিনশট
+                if (iOpen && mOpen && rOpen && pOpen && (now - lastActionTime > 3000)) {
+                    lastActionTime = now;
+                    captureScreenshot();
+                }
+
+                // ১ বৃদ্ধা আঙুল = প্রোফাইল নাম ও ভয়েস
+                if (thumbUp && (now - lastActionTime > 3000)) {
+                    lastActionTime = now;
+                    showProfile();
+                }
+
+                // চিমটি কাটা = ক্লিক
+                const dist = Math.hypot((pts[8].x - pts[4].x) * w, (pts[8].y - pts[4].y) * h);
+                let click = false;
+                if (dist < 35) {
+                    cursor.classList.add('click');
+                    if (!isPinching) {
+                        isPinching = true;
+                        click = true;
+                    }
+                } else {
+                    cursor.classList.remove('click');
+                    isPinching = false;
+                }
+
+                handlePointer(curX, curY, click);
+            }
+            canvasCtx.restore();
+        }
+
+        const hands = new Hands({
+            locateFile: (f) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${f}`
+        });
+
+        hands.setOptions({
+            maxNumHands: 1,
+            modelComplexity: 0,
+            minDetectionConfidence: 0.5,
+            minTrackingConfidence: 0.5
+        });
+
+        hands.onResults(onResults);
+
+        const camera = new Camera(videoElement, {
+            onFrame: async () => { await hands.send({image: videoElement}); },
+            width: 640,
+            height: 480
+        });
+
+        camera.start();
+    </script>
 </body>
     </html>
