@@ -1,44 +1,64 @@
 const videoElement = document.getElementsByClassName('input_video')[0];
 const canvasElement = document.getElementsByClassName('output_canvas')[0];
 const canvasCtx = canvasElement.getContext('2d');
-const statusDiv = document.getElementById('status');
-const urlInput = document.getElementById('urlInput');
-const webFrame = document.getElementById('webFrame');
-const cursor = document.getElementById('cursor');
-const keyboardContainer = document.getElementById('keyboard');
 
-// ১. ভার্চুয়াল কিবোর্ড জেনারেট করা
+const hudInput = document.getElementById('hudInput');
+const keyboardContainer = document.getElementById('keyboard');
+const cursor = document.getElementById('cursor');
+const browserSection = document.getElementById('browser-section');
+const urlDisplay = document.getElementById('urlDisplay');
+const webFrame = document.getElementById('webFrame');
+const statusPill = document.getElementById('status-pill');
+
+// ১. ভার্চুয়াল কিবোর্ড তৈরি
 const keys = [
   'Q','W','E','R','T','Y','U','I','O','P',
   'A','S','D','F','G','H','J','K','L',
   'Z','X','C','V','B','N','M',
   '1','2','3','4','5','6','7','8','9','0',
-  'SPACE', 'BACK', 'GO'
+  'SPACE', 'BACK', 'SEARCH'
 ];
 
 keys.forEach(key => {
   const btn = document.createElement('button');
   btn.className = 'key-btn';
+  if (key === 'SPACE' || key === 'BACK') btn.classList.add('action-key');
+  if (key === 'SEARCH') btn.classList.add('go-key');
   btn.innerText = key;
   btn.dataset.key = key;
   keyboardContainer.appendChild(btn);
 });
 
-function loadUrl() {
-  let url = urlInput.value.trim();
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = 'https://www.bing.com/search?q=' + encodeURIComponent(url);
-  }
-  webFrame.src = url;
+// ব্রাউজার বন্ধ করার ফাংশন
+function closeBrowser() {
+  browserSection.classList.remove('active');
+  webFrame.src = "about:blank";
 }
 
-// ২. আল্ট্রা-ফাস্ট AI মডেল সেটআপ
+// সার্চ চালুর ফাংশন
+function executeSearch() {
+  const query = hudInput.value.trim();
+  if (!query) return;
+
+  let targetUrl = query;
+  if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+    targetUrl = 'https://html.duckduckgo.com/html/?q=' + encodeURIComponent(query);
+  }
+
+  urlDisplay.innerText = targetUrl;
+  webFrame.src = targetUrl;
+  
+  // স্বয়ংক্রিয়ভাবে স্প্লিট স্ক্রিনে সুইচ করবে (ক্যামেরা নিচে, ব্রাউজার উপরে)
+  browserSection.classList.add('active');
+}
+
+// ২. অত্যন্ত ফাস্ট AI ট্র্যাকিং সেটআপ (মোবাইল কনফিগারেশন ফ্রেন্ডলি)
 const faceMesh = new FaceMesh({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`
 });
 faceMesh.setOptions({
   maxNumFaces: 1,
-  refineLandmarks: false, // ফাস্ট স্পিডের জন্য
+  refineLandmarks: false,
   minDetectionConfidence: 0.5,
   minTrackingConfidence: 0.5
 });
@@ -48,7 +68,7 @@ const hands = new Hands({
 });
 hands.setOptions({
   maxNumHands: 1,
-  modelComplexity: 0, // আল্ট্রা ফাস্ট পারফরম্যান্স
+  modelComplexity: 0, // সুপার ফাস্ট পারফরম্যান্স
   minDetectionConfidence: 0.5,
   minTrackingConfidence: 0.5
 });
@@ -59,19 +79,25 @@ let latestHandResults = null;
 faceMesh.onResults(results => { latestFaceResults = results; });
 hands.onResults(results => { latestHandResults = results; });
 
-// ৩. হাই-স্পিড রেন্ডারিং লুপ (FPS Boost)
+// ৩. হাই-স্পিড রেন্ডারিং লুপ
 let lastPinchTime = 0;
 
-function drawFrame() {
+function renderLoop() {
+  // ক্যানভাস সাইজ স্ক্রিন অনুযায়ী অ্যাডজাস্ট
+  if (canvasElement.width !== canvasElement.clientWidth) {
+    canvasElement.width = canvasElement.clientWidth;
+    canvasElement.height = canvasElement.clientHeight;
+  }
+
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-  // ক্যামেরা ফ্রেম আঁকা
+  // ক্যামেরা ফিড ড্র
   if (latestFaceResults && latestFaceResults.image) {
     canvasCtx.drawImage(latestFaceResults.image, 0, 0, canvasElement.width, canvasElement.height);
   }
 
-  // ছবির মতো ফেসে হলুদ বক্স ও ট্র্যাকিং ড্র করা
+  // ফেইস ট্র্যাকিং ও হলুদ বর্ডার বক্স
   if (latestFaceResults && latestFaceResults.multiFaceLandmarks && latestFaceResults.multiFaceLandmarks.length > 0) {
     const landmarks = latestFaceResults.multiFaceLandmarks[0];
     let minX = canvasElement.width, minY = canvasElement.height, maxX = 0, maxY = 0;
@@ -85,26 +111,27 @@ function drawFrame() {
       if (y > maxY) maxY = y;
     });
 
-    // হলুদ বর্ডার বক্স (Image 2 Style)
+    // হলুদ ডিজিটাল বক্স
     canvasCtx.strokeStyle = '#e3b341';
     canvasCtx.lineWidth = 3;
-    canvasCtx.strokeRect(minX - 12, minY - 12, (maxX - minX) + 24, (maxY - minY) + 24);
-    
-    // ফেস মেস আঁকা
-    drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, {color: '#00ffcc40', lineWidth: 1});
-    statusDiv.innerText = "⚡ আল্ট্রা-ফাস্ট ইশারা ও ফেস ট্র্যাকিং চালু রয়েছে!";
+    canvasCtx.strokeRect(minX - 10, minY - 10, (maxX - minX) + 20, (maxY - minY) + 20);
+
+    // ফেইস মেস লাইন ড্র
+    drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, {color: '#00f0ff33', lineWidth: 1});
+    statusPill.innerText = "⚡ আল্ট্রা-ফাস্ট ইশারা ও ফেইস ট্র্যাকিং সক্রিয়";
   }
 
-  // হাতের ইশারা দিয়ে কার্সর ও ক্লিক কন্ট্রোল
+  // হাতের আঙুলের ইশারা দিয়ে কার্সর চালনা
   if (latestHandResults && latestHandResults.multiHandLandmarks && latestHandResults.multiHandLandmarks.length > 0) {
     const handLandmarks = latestHandResults.multiHandLandmarks[0];
-    drawConnectors(canvasCtx, handLandmarks, HAND_CONNECTIONS, {color: '#ff0055', lineWidth: 2});
-    drawLandmarks(canvasCtx, handLandmarks, {color: '#ffffff', radius: 2});
+    
+    drawConnectors(canvasCtx, handLandmarks, HAND_CONNECTIONS, {color: '#00f0ff', lineWidth: 2});
+    drawLandmarks(canvasCtx, handLandmarks, {color: '#ff0055', radius: 2});
 
     const indexTip = handLandmarks[8]; // তর্জনী
     const thumbTip = handLandmarks[4]; // বুড়ো আঙুল
 
-    // কার্সরের পজিশন গণনা (মিরর ইফেক্ট সহ)
+    // স্ক্রিনের সাথে সমন্বয়
     const cursorX = (1 - indexTip.x) * window.innerWidth;
     const cursorY = indexTip.y * window.innerHeight;
 
@@ -112,15 +139,15 @@ function drawFrame() {
     cursor.style.left = `${cursorX}px`;
     cursor.style.top = `${cursorY}px`;
 
-    // আঙুলের জোড়া লাগানোর দূরত্ব (Pinch Detection)
+    // চিমটি কাটা (Pinch Gesture) চেক
     const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
 
-    if (distance < 0.05) { // আঙুল ছোঁয়ালে ক্লিক
+    if (distance < 0.055) { // আঙুল ছোঁয়ালে
       cursor.classList.add('clicking');
       const now = Date.now();
-      if (now - lastPinchTime > 300) { 
+      if (now - lastPinchTime > 280) { // ২৮০ মিলি-সেকেন্ড কুলডাউন
         lastPinchTime = now;
-        handleGestureClick(cursorX, cursorY);
+        handleGesturePinch(cursorX, cursorY);
       }
     } else {
       cursor.classList.remove('clicking');
@@ -130,45 +157,43 @@ function drawFrame() {
   }
 
   canvasCtx.restore();
-  requestAnimationFrame(drawFrame);
+  requestAnimationFrame(renderLoop);
 }
 
-// ৪. ইশারায় টাইপিং ও ক্লিক হ্যান্ডলার
-function handleGestureClick(x, y) {
+// ৪. ইশারায় টাইপিং হ্যান্ডলার
+function handleGesturePinch(x, y) {
   const elem = document.elementFromPoint(x, y);
   if (!elem) return;
 
   if (elem.classList.contains('key-btn')) {
     const key = elem.dataset.key;
     if (key === 'SPACE') {
-      urlInput.value += ' ';
+      hudInput.value += ' ';
     } else if (key === 'BACK') {
-      urlInput.value = urlInput.value.slice(0, -1);
-    } else if (key === 'GO') {
-      loadUrl();
+      hudInput.value = hudInput.value.slice(0, -1);
+    } else if (key === 'SEARCH') {
+      executeSearch();
     } else {
-      urlInput.value += key;
+      hudInput.value += key;
     }
-  } else if (elem.classList.contains('btn-go')) {
-    loadUrl();
   } else {
     elem.click();
   }
 }
 
-// ৫. ক্যামেরা চালু করা
+// ৫. অপটিমাইজড ক্যামেরা প্রসেসিং (320x240 রেজোলিউশন - ফাস্ট স্পিড)
 const camera = new Camera(videoElement, {
   onFrame: async () => {
     await faceMesh.send({image: videoElement});
     await hands.send({image: videoElement});
   },
-  width: 480,
-  height: 360,
+  width: 320,
+  height: 240,
   facingMode: 'user'
 });
 
 camera.start().then(() => {
-  requestAnimationFrame(drawFrame);
+  requestAnimationFrame(renderLoop);
 }).catch(err => {
-  statusDiv.innerText = "ক্যামেরা ত্রুটি: " + err;
+  statusPill.innerText = "ক্যামেরা চালুর ত্রুটি: " + err;
 });
