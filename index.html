@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber UI - Face & Hand Tracker</title>
+  <title>Cyber Tracker Pro - Shakil</title>
   <link rel="stylesheet" href="style.css">
   
   <!-- MediaPipe Libraries -->
@@ -11,37 +11,41 @@
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+  <!-- Real Screenshot Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-  <div class="cyber-container">
-    <!-- TOP BOX: Cyber Screen, Tools & Virtual Keyboard -->
+  <div class="cyber-container" id="captureTarget">
+    <!-- TOP BOX: Cyber Control Screen & Virtual Keyboard -->
     <div class="top-box cyber-card">
       <div class="cyber-tools">
-        <span class="tool-title">⚡ CYBER TOOLS</span>
-        <button class="cyber-btn" onclick="takeScreenshot()">📸 স্ক্রিনশট (৩ আঙুল)</button>
-        <button class="cyber-btn" onclick="showDevInfo()">👤 ডেভলপার (মাঝের আঙুল/ভয়েস)</button>
-        <span id="voice-status" class="status-tag">🎙️ ভয়েস রেডি</span>
+        <span class="tool-title">⚡ CYBER HUD V2.0</span>
+        <div class="btn-group">
+          <button class="cyber-btn" onclick="takeScreenshot()">📸 স্ক্রিনশট (৩ আঙুল)</button>
+          <button class="cyber-btn" onclick="executeSearch()">🔍 ব্রাউজ / সার্চ</button>
+          <button class="cyber-btn" onclick="showDevInfo()">👤 ডেভলপার (মাঝের আঙুল)</button>
+        </div>
+        <span id="voice-status" class="status-tag">🎙️ ভয়েস অ্যাক্টিভ</span>
       </div>
 
       <div class="display-screen">
-        <textarea id="cyberInput" placeholder="সাইবার কিবোর্ড দিয়ে এখানে লিখুন..."></textarea>
+        <textarea id="cyberInput" placeholder="সাইবার কিবোর্ড বা ভয়েস দিয়ে লিখুন..."></textarea>
       </div>
 
       <!-- Virtual Cyber Keyboard -->
-      <div class="cyber-keyboard" id="keyboard">
-        <!-- JS দিয়ে কিবোর্ড তৈরি হবে -->
-      </div>
+      <div class="cyber-keyboard" id="keyboard"></div>
     </div>
 
-    <!-- BOTTOM BOX: Camera Feed with Face & Hand Tracking -->
+    <!-- BOTTOM BOX: Real-time Tracking Box -->
     <div class="bottom-box cyber-card">
       <div class="video-container">
         <video id="webcam" autoplay playsinline></video>
         <canvas id="output_canvas"></canvas>
         <div class="tracking-overlay">
-          <span>FACE & HAND TRACKING: ACTIVE</span>
-          <span id="gesture-detected">গেচার: অপেক্ষারত...</span>
+          <span class="pulse-icon">🔴</span>
+          <span>SYSTEM ACTIVE | FACE & HAND TRACKING</span>
+          <span id="gesture-detected">গেচার: স্ট্যান্ডবাই...</span>
         </div>
       </div>
     </div>
@@ -50,11 +54,15 @@
   <!-- Developer Info Modal -->
   <div id="devModal" class="modal">
     <div class="modal-content cyber-card">
-      <h2>⚡ DEVELOPER INFORMATION ⚡</h2>
-      <p><strong>ডেভলপার নাম:</strong> Cyber Creator</p>
-      <p><strong>ভার্সন:</strong> 2.0 (High Speed Digital Edition)</p>
-      <p><strong>টেকনোলজি:</strong> MediaPipe, Web Speech API, HTML5/CSS3/JS</p>
-      <p><strong>স্ট্যাটাস:</strong> System Operational</p>
+      <div class="cyber-header">
+        <h2>⚡ DEVELOPER PROFILE ⚡</h2>
+      </div>
+      <div class="dev-details">
+        <p><strong>ডেভলপার নাম:</strong> Shakil / Cyber Creator</p>
+        <p><strong>প্রজেক্ট ভার্সন:</strong> 2.0 (Pro Digital Edition)</p>
+        <p><strong>ইঞ্জিন:</strong> MediaPipe + Web Audio + HTML2Canvas</p>
+        <p><strong>স্ট্যাটাস:</strong> Fully Operational</p>
+      </div>
       <button class="cyber-btn close-btn" onclick="hideDevInfo()">বন্ধ করুন</button>
     </div>
   </div>
