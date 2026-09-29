@@ -2,68 +2,71 @@
 <html lang="bn">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Cyber Tracker Pro - Shakil</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber HUD Air-Touch Pro - Shakil</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- MediaPipe Libraries -->
+  <!-- MediaPipe AI Libraries -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-  <!-- Real Screenshot Library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
+  <!-- Air Touch Visual Reticle / Cursor -->
+  <div id="cyberCursor"></div>
+
   <div class="cyber-container" id="captureTarget">
-    <!-- TOP BOX: Cyber Control Screen & Virtual Keyboard -->
+    <!-- TOP SECTION: Screen, In-App Browser & Tools -->
     <div class="top-box cyber-card">
       <div class="cyber-tools">
-        <span class="tool-title">⚡ CYBER HUD V2.0</span>
+        <span class="tool-title">⚡ CYBER HUD V3.0</span>
         <div class="btn-group">
-          <button class="cyber-btn" onclick="takeScreenshot()">📸 স্ক্রিনশট (৩ আঙুল)</button>
-          <button class="cyber-btn" onclick="executeSearch()">🔍 ব্রাউজ / সার্চ</button>
-          <button class="cyber-btn" onclick="showDevInfo()">👤 ডেভলপার (মাঝের আঙুল)</button>
+          <button class="cyber-btn" onclick="takeScreenshot()">📸 স্ক্রিনশট</button>
+          <button class="cyber-btn" onclick="openYouTube()">▶️ YouTube</button>
+          <button class="cyber-btn" onclick="executeSearch()">🔍 সার্চ</button>
+          <button class="cyber-btn" onclick="showDevInfo()">👤 ডেভলপার</button>
         </div>
-        <span id="voice-status" class="status-tag">🎙️ ভয়েস অ্যাক্টিভ</span>
       </div>
 
-      <div class="display-screen">
-        <textarea id="cyberInput" placeholder="সাইবার কিবোর্ড বা ভয়েস দিয়ে লিখুন..."></textarea>
+      <!-- In-App Browser / Youtube Display Container -->
+      <div class="display-container">
+        <iframe id="browserFrame" src="about:blank" class="cyber-iframe hidden"></iframe>
+        <textarea id="cyberInput" placeholder="এখানে টাচ করলে ডিজিটাল কিবোর্ড আসবে..." inputmode="none" readonly></textarea>
       </div>
 
-      <!-- Virtual Cyber Keyboard -->
-      <div class="cyber-keyboard" id="keyboard"></div>
+      <!-- Virtual Cyber Keyboard (Hidden by default) -->
+      <div class="cyber-keyboard hidden" id="keyboard"></div>
     </div>
 
-    <!-- BOTTOM BOX: Real-time Tracking Box -->
+    <!-- BOTTOM SECTION: Face/Hand Tracking Box + Matrix Background -->
     <div class="bottom-box cyber-card">
       <div class="video-container">
+        <!-- Matrix Code Animation Canvas -->
+        <canvas id="matrixCanvas"></canvas>
         <video id="webcam" autoplay playsinline></video>
         <canvas id="output_canvas"></canvas>
         <div class="tracking-overlay">
-          <span class="pulse-icon">🔴</span>
-          <span>SYSTEM ACTIVE | FACE & HAND TRACKING</span>
-          <span id="gesture-detected">গেচার: স্ট্যান্ডবাই...</span>
+          <span class="pulse">🔴 AIR-GESTURE & FACE HUD</span>
+          <span id="gesture-status">তর্জনী দিয়ে কারসর সরান | চিমটি দিয়ে সিলেক্ট করুন</span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Developer Info Modal -->
+  <!-- Cyber Glitch Animated Modal -->
   <div id="devModal" class="modal">
-    <div class="modal-content cyber-card">
-      <div class="cyber-header">
-        <h2>⚡ DEVELOPER PROFILE ⚡</h2>
-      </div>
+    <div class="modal-content cyber-card glitch-border">
+      <div class="glitch-title">⚡ DEVELOPER PROFILE ⚡</div>
       <div class="dev-details">
-        <p><strong>ডেভলপার নাম:</strong> Shakil / Cyber Creator</p>
-        <p><strong>প্রজেক্ট ভার্সন:</strong> 2.0 (Pro Digital Edition)</p>
-        <p><strong>ইঞ্জিন:</strong> MediaPipe + Web Audio + HTML2Canvas</p>
-        <p><strong>স্ট্যাটাস:</strong> Fully Operational</p>
+        <p><strong>নাম:</strong> Mohammad Billal Hossain (Shakil)</p>
+        <p><strong>ইমেইল:</strong> smshakilco@gmail.com</p>
+        <p><strong>সিস্টেম:</strong> Cyber Touchless Interface v3.0</p>
+        <p><strong>স্পিড:</strong> High Performance Engine</p>
       </div>
-      <button class="cyber-btn close-btn" onclick="hideDevInfo()">বন্ধ করুন</button>
+      <button class="cyber-btn close-btn" onclick="hideDevInfo()">[ X ] সাইবার উইন্ডো বন্ধ করুন</button>
     </div>
   </div>
 
