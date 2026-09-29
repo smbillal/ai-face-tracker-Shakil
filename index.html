@@ -3,24 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Gesture Fullscreen Control & Ultra-Fast Browser</title>
+    <title>AI Gesture Web App</title>
     
-    <!-- CSS File -->
-    <link rel="stylesheet" href="style.css">
+    <!-- CSS File Link (নিশ্চিত করুন গিটহাবে style.css নামেই ফাইল আছে) -->
+    <link rel="stylesheet" href="./style.css">
 
-    <!-- MediaPipe AI & External Libraries -->
+    <!-- MediaPipe & External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-    <!-- Screenshot Flash Overlay -->
     <div id="flash-overlay"></div>
 
     <div id="app-container">
-        
-        <!-- Top Half: Browser View -->
+        <!-- Top Half Browser -->
         <div id="browser-section">
             <div class="top-nav">
                 <div class="url-display" id="urlDisplay">https://www.bing.com</div>
@@ -29,10 +27,8 @@
             <iframe id="webFrame" src="about:blank"></iframe>
         </div>
 
-        <!-- Main Camera Section -->
+        <!-- Camera Section -->
         <div id="camera-section">
-            
-            <!-- Top Controls (Fixed Search Bar & Buttons) -->
             <div class="top-bar">
                 <div class="search-bar-container" id="search-trigger">
                     <svg class="google-icon" viewBox="0 0 24 24">
@@ -46,13 +42,12 @@
                 <button class="nav-btn" id="btn-code-toggle">💻 কোড</button>
             </div>
 
-            <!-- Quick Object Clear Button -->
             <div class="clear-screen-btn" id="btn-quick-clear" title="স্ক্রিন ক্লিয়ার">✕</div>
 
             <video id="webcam" autoplay playsinline muted></video>
             <canvas id="output_canvas"></canvas>
 
-            <!-- Floating Glass Keyboard (Hides by default, Pop-up on Search Bar Hover) -->
+            <!-- Keyboard -->
             <div id="virtual-keyboard">
                 <div class="keyboard-row">
                     <div class="key blue-key" data-key="1">1</div><div class="key blue-key" data-key="2">2</div><div class="key blue-key" data-key="3">3</div>
@@ -81,23 +76,23 @@
                 </div>
             </div>
 
-            <!-- Profile Card (Single Thumb Gesture) -->
+            <!-- Profile Card -->
             <div id="owner-card">
                 <div class="owner-title">⚡ WEBSITE CREATOR ⚡</div>
                 <div class="owner-name">Mohammad Billal Hossain</div>
                 <div class="owner-sub">AI Gesture Interface Developer</div>
             </div>
 
-            <!-- Neon Blue Code Studio (Typewriter) -->
+            <!-- Code Studio -->
             <div id="code-studio-box">
                 <div class="code-header">
-                    <span>💻 Source Code Studio (HTML & JS)</span>
+                    <span>💻 Source Code Studio</span>
                     <span style="cursor:pointer;" id="close-code-btn">✕</span>
                 </div>
                 <div class="code-content" id="code-typewriter"></div>
             </div>
 
-            <!-- HUD Status -->
+            <!-- Status HUD -->
             <div class="hud-status">
                 <div class="status-dot" id="status-dot"></div>
                 <span id="hud-text">এআই ট্র্যাকিং প্রস্তুত হচ্ছে...</span>
@@ -105,10 +100,8 @@
         </div>
     </div>
 
-    <!-- Ultra-Fast Laser Cursor -->
     <div id="ai-cursor"></div>
 
-    <!-- JavaScript Link -->
-    <script src="script.js"></script>
+    <script src="./script.js"></script>
 </body>
-    </html>
+                    </html>
