@@ -1,1 +1,21 @@
-
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AI Face Tracker</title>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+  <style>
+    body { display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #222; margin: 0; }
+    canvas { max-width: 100%; border: 2px solid #fff; border-radius: 10px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <video class="input_video" style="display:none;" playsinline></video>
+    <canvas class="output_canvas" width="640" height="480"></canvas>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
