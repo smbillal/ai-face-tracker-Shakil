@@ -1,1 +1,126 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber HUD v6.0 - AI 4K Cam & IoT Engine</title>
+  <link rel="stylesheet" href="style.css?v=6.0">
+  
+  <!-- MediaPipe AI Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+</head>
+<body>
 
+  <!-- Air Cursor -->
+  <div id="yellowCursor"></div>
+
+  <!-- Cyber Search Simulation Overlay -->
+  <div id="cyberSimOverlay" class="sim-overlay hidden">
+    <div class="sim-box">
+      <div class="sim-spinner"></div>
+      <div class="sim-text" id="simText">INITIALIZING CYBER SEARCH PROTOCOL...</div>
+    </div>
+  </div>
+
+  <!-- Countdown Overlay for Camera Capture -->
+  <div id="countdownOverlay" class="countdown-overlay hidden">
+    <span id="countdownNum">3</span>
+  </div>
+
+  <div class="cyber-container">
+    
+    <!-- TOP BOX: Cyber Search & Web Viewport -->
+    <div class="top-box cyber-card">
+      
+      <!-- Top Control Tools -->
+      <div class="cyber-tools">
+        <span class="tool-title">⚡ CYBER HUD v6.0</span>
+        <div class="btn-group">
+          <button class="cyber-btn" onclick="executeCyberSearch('google')">🔍 Cyber Search</button>
+          <button class="cyber-btn" onclick="openYouTubeMultiChannel()">▶️ YouTube</button>
+          <button class="cyber-btn cam-btn" onclick="toggleCamMode()">📷 AI 4K Cam</button>
+          <button class="cyber-btn voice-btn" onclick="startVoiceSearch()">🎙️ Voice</button>
+          <button class="cyber-btn" onclick="showDevInfo()">👤 ডেভলপার</button>
+        </div>
+      </div>
+
+      <!-- IoT Smart Control Bar -->
+      <div class="iot-panel">
+        <button class="iot-btn" id="lightBtn" onclick="toggleIoT('light')">💡 Light: OFF</button>
+        <button class="iot-btn" id="fanBtn" onclick="toggleIoT('fan')">🌀 Fan: OFF</button>
+        <button class="iot-btn" id="acBtn" onclick="toggleIoT('ac')">❄️ AC: OFF</button>
+      </div>
+
+      <!-- Search Input Bar -->
+      <div class="search-bar-container">
+        <span class="search-icon">🔎</span>
+        <input type="text" id="cyberInput" placeholder="সার্চ করতে টাইপ বা ভয়েস বলুন..." autocomplete="off" readonly>
+        <button class="cyber-action-btn" onclick="executeCyberSearch('google')">Search</button>
+      </div>
+
+      <!-- Full Virtual Cyber Keyboard -->
+      <div class="cyber-keyboard hidden" id="keyboard"></div>
+
+      <!-- Camera Effect Selector (Visible in Cam Mode) -->
+      <div id="filterBar" class="filter-bar hidden">
+        <button class="filter-btn active" onclick="applyCamFilter('beauty')">✨ 4K Beauty</button>
+        <button class="filter-btn" onclick="applyCamFilter('dslr')">📸 DSLR Bokeh</button>
+        <button class="filter-btn" onclick="applyCamFilter('neon')">🔴 Cyber Neon</button>
+        <button class="filter-btn" onclick="applyCamFilter('bw')">🎬 B&W Noir</button>
+      </div>
+
+      <!-- Browser / Viewport Container -->
+      <div class="viewport-container">
+        <iframe id="browserFrame" class="cyber-iframe" src="about:blank"></iframe>
+      </div>
+    </div>
+
+    <!-- BOTTOM BOX: Webcam, Face Mesh & AI Tracking -->
+    <div class="bottom-box cyber-card">
+      <div class="video-container">
+        <canvas id="matrixCanvas"></canvas>
+        <video id="webcam" autoplay playsinline muted></video>
+        <canvas id="output_canvas"></canvas>
+        
+        <!-- Live System Metrics Overlay -->
+        <div class="widget-overlay top-left">
+          <span id="timeWidget">⏱️ 00:00:00</span>
+          <span id="batteryWidget">🔋 Battery: --%</span>
+          <span id="fpsWidget">⚡ FPS: 60</span>
+        </div>
+
+        <div class="tracking-overlay bottom-left">
+          <span class="pulse-text">🟡 AIR-TOUCH ACTIVE</span>
+          <span id="gesture-status">তর্জনী দিয়ে কারসর | ৩টি আঙুলে ছবি উঠবে (3s)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scrolling Ticker for Developer Email & Name -->
+    <div class="developer-ticker">
+      <marquee behavior="scroll" direction="left" scrollamount="5">
+        ⚡ DEVELOPER: MOHAMMAD BILLAL HOSSAIN (SHAKIL) &nbsp;&nbsp;|&nbsp;&nbsp; 📧 EMAIL: smbillal.dev@gmail.com &nbsp;&nbsp;|&nbsp;&nbsp; 🤖 CYBER HUD AI MOTION CONTROL SYSTEM v6.0
+      </marquee>
+    </div>
+
+  </div>
+
+  <!-- Developer Info Modal -->
+  <div id="devModal" class="modal">
+    <div class="modal-content cyber-card">
+      <h2 class="cyber-title">⚡ CYBER HUD DEVELOPER ⚡</h2>
+      <div class="dev-details">
+        <p><strong>ডেভলপার:</strong> Mohammad Billal Hossain (Shakil)</p>
+        <p><strong>ইমেইল:</strong> smbillal.dev@gmail.com</p>
+        <p><strong>প্রজেক্ট:</strong> Cyber HUD AI Camera & Automation v6.0</p>
+      </div>
+      <button class="cyber-btn close-btn" onclick="hideDevInfo()">[ X ] উইন্ডো বন্ধ করুন</button>
+    </div>
+  </div>
+
+  <script src="script.js?v=6.0"></script>
+</body>
+    </html>
