@@ -4,17 +4,17 @@ const canvasCtx = canvasElement.getContext('2d');
 const cyberInput = document.getElementById('cyberInput');
 const browserFrame = document.getElementById('browserFrame');
 const keyboardContainer = document.getElementById('keyboard');
-const cursorEl = document.getElementById('cyberCursor');
+const yellowCursor = document.getElementById('yellowCursor');
 const gestureStatus = document.getElementById('gesture-status');
 const devModal = document.getElementById('devModal');
 
-// Synthesized Sound Effects (High Speed Web Audio)
+// Synthesized Fast Web Audio Sound Effect
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playAudio(freq = 700, duration = 0.05, type = 'sawtooth') {
+function playSound(freq = 750, duration = 0.04) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = type;
+  osc.type = 'sine';
   osc.frequency.value = freq;
   gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
@@ -24,15 +24,16 @@ function playAudio(freq = 700, duration = 0.05, type = 'sawtooth') {
   osc.stop(audioCtx.currentTime + duration);
 }
 
-// Input Focus Listener -> Show Digital Keyboard without mobile keyboard
-cyberInput.addEventListener('click', () => {
+// Open Digital Keyboard on input interaction
+function openKeyboard() {
   keyboardContainer.classList.remove('hidden');
-  browserFrame.classList.add('hidden');
-  cyberInput.classList.remove('hidden');
-  playAudio(900, 0.08);
-});
+  playSound(900, 0.05);
+}
 
-// Virtual Keyboard Layout Setup
+cyberInput.addEventListener('mouseenter', openKeyboard);
+cyberInput.addEventListener('click', openKeyboard);
+
+// Keyboard Setup
 const keys = ['1','2','3','4','5','6','7','8','9','0','Q','W','E','R','T','Y','U','I','O','P','A','S','D','F','G','H','J','K','L','SPACE','BKSP','CLOSE'];
 
 keys.forEach(key => {
@@ -46,7 +47,7 @@ keys.forEach(key => {
 });
 
 function handleKeyPress(key) {
-  playAudio(800, 0.04);
+  playSound(850, 0.04);
   if (key === 'BKSP') {
     cyberInput.value = cyberInput.value.slice(0, -1);
   } else if (key === 'SPACE') {
@@ -58,41 +59,39 @@ function handleKeyPress(key) {
   }
 }
 
-// Matrix Background Animation Loop
+// Background Cyber Matrix Animation
 const matrixCanvas = document.getElementById('matrixCanvas');
 const mCtx = matrixCanvas.getContext('2d');
-function initMatrix() {
+function resizeMatrix() {
   matrixCanvas.width = matrixCanvas.offsetWidth;
   matrixCanvas.height = matrixCanvas.offsetHeight;
 }
-initMatrix();
+resizeMatrix();
 
-const matrixChars = "0110100101CYBERHUD30";
-const fontSize = 10;
-const columns = Math.floor(matrixCanvas.width / fontSize) || 20;
-const drops = Array(columns).fill(1);
+const chars = "010101SHAKILCYBER";
+const drops = Array(30).fill(1);
 
 function drawMatrix() {
-  mCtx.fillStyle = "rgba(0, 0, 0, 0.1)";
+  mCtx.fillStyle = "rgba(0, 0, 0, 0.15)";
   mCtx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
   mCtx.fillStyle = "#00f3ff";
-  mCtx.font = fontSize + "px monospace";
+  mCtx.font = "10px monospace";
 
   for (let i = 0; i < drops.length; i++) {
-    const text = matrixChars.charAt(Math.floor(Math.random() * matrixChars.length));
-    mCtx.fillText(text, i * fontSize, drops[i] * fontSize);
-    if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
+    const text = chars.charAt(Math.floor(Math.random() * chars.length));
+    mCtx.fillText(text, i * 12, drops[i] * 12);
+    if (drops[i] * 12 > matrixCanvas.height && Math.random() > 0.975) drops[i] = 0;
     drops[i]++;
   }
 }
 
-// MediaPipe Optimization (High Performance)
+// Fast MediaPipe Tracking Setup
 const hands = new Hands({
   locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
 });
 hands.setOptions({
   maxNumHands: 1,
-  modelComplexity: 0, // Maximum Speed
+  modelComplexity: 0, // Fastest execution
   minDetectionConfidence: 0.6,
   minTrackingConfidence: 0.6
 });
@@ -110,130 +109,121 @@ faceMesh.setOptions({
 let handResults = null;
 let faceResults = null;
 
-hands.onResults((results) => { handResults = results; });
-faceMesh.onResults((results) => { faceResults = results; });
+hands.onResults((r) => { handResults = r; });
+faceMesh.onResults((r) => { faceResults = r; });
 
 let lastPinchTime = 0;
 
 function renderLoop() {
-  drawMatrix(); // Render Background Matrix
-  
+  drawMatrix();
+
   canvasCtx.save();
   canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
 
-  // Render Face Tracking Mesh
+  // Draw Face Mesh Overlay
   if (faceResults && faceResults.multiFaceLandmarks) {
     for (const landmarks of faceResults.multiFaceLandmarks) {
-      drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, {color: '#00f3ff18', lineWidth: 1});
+      drawConnectors(canvasCtx, landmarks, FACEMESH_TESSELATION, {color: '#00f3ff20', lineWidth: 1});
     }
   }
 
-  // Render Hand Tracking & Process Air-Touch Cursor
+  // Draw Hand Mesh & Process Yellow Cursor
   if (handResults && handResults.multiHandLandmarks) {
     for (const landmarks of handResults.multiHandLandmarks) {
-      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#ff0055', lineWidth: 2});
-      drawLandmarks(canvasCtx, landmarks, {color: '#00f3ff', lineWidth: 1, radius: 2});
+      drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, {color: '#ff0055', lineWidth: 1.5});
+      drawLandmarks(canvasCtx, landmarks, {color: '#ffeb3b', lineWidth: 1, radius: 2});
 
-      processAirTouch(landmarks);
+      processYellowCursor(landmarks);
     }
   }
   canvasCtx.restore();
 }
 
-// Air-Touch Reticle Cursor & Pinch Click System
-function processAirTouch(landmarks) {
+// Fast Cursor Tracking & Pinch Selection
+function processYellowCursor(landmarks) {
   const indexTip = landmarks[8];
   const thumbTip = landmarks[4];
 
-  // Mirror X coordinate for video feed
+  // Smooth Screen Coordinate Calculation
   const cursorX = (1 - indexTip.x) * window.innerWidth;
   const cursorY = indexTip.y * window.innerHeight;
 
-  // Move Reticle Cursor
-  cursorEl.style.left = `${cursorX}px`;
-  cursorEl.style.top = `${cursorY}px`;
+  // Move Yellow Pointer
+  yellowCursor.style.left = `${cursorX}px`;
+  yellowCursor.style.top = `${cursorY}px`;
 
-  // Calculate Distance for Pinch Gesture (Index Tip to Thumb Tip)
+  // Auto Open Keyboard when Cursor hovers Search Box
+  const searchBox = document.querySelector('.search-bar-container');
+  const searchRect = searchBox.getBoundingClientRect();
+  if (cursorX >= searchRect.left && cursorX <= searchRect.right &&
+      cursorY >= searchRect.top && cursorY <= searchRect.bottom) {
+    openKeyboard();
+  }
+
+  // Pinch Pinch Distance Calculation (Thumb tip to Index tip)
   const distance = Math.hypot(indexTip.x - thumbTip.x, indexTip.y - thumbTip.y);
   const now = Date.now();
 
-  if (distance < 0.05) { // Pinch Trigger Threshold
-    cursorEl.classList.add('pinched');
-    if (now - lastPinchTime > 600) { // Cooldown delay
+  if (distance < 0.055) { // Pinching trigger
+    yellowCursor.classList.add('pinched');
+    if (now - lastPinchTime > 500) {
       lastPinchTime = now;
-      playAudio(1200, 0.08);
+      playSound(1200, 0.06);
 
-      // Perform Physical Click under Cyber Cursor
-      cursorEl.style.display = 'none';
-      const targetElement = document.elementFromPoint(cursorX, cursorY);
-      cursorEl.style.display = 'block';
+      // Perform Element Trigger under Cursor
+      yellowCursor.style.display = 'none';
+      const elementUnderCursor = document.elementFromPoint(cursorX, cursorY);
+      yellowCursor.style.display = 'block';
 
-      if (targetElement) {
-        targetElement.click();
+      if (elementUnderCursor) {
+        elementUnderCursor.click();
         gestureStatus.innerText = "কমান্ড সিলেক্ট করা হয়েছে!";
       }
     }
   } else {
-    cursorEl.classList.remove('pinched');
-  }
-
-  // 3-Finger Screenshot Gesture Detection
-  const middleUp = landmarks[12].y < landmarks[10].y;
-  const ringUp = landmarks[16].y < landmarks[14].y;
-  const pinkyUp = landmarks[20].y < landmarks[18].y;
-
-  if (middleUp && ringUp && !pinkyUp && (now - lastPinchTime > 2500)) {
-    takeScreenshot();
-    lastPinchTime = now;
+    yellowCursor.classList.remove('pinched');
   }
 }
 
-// Functions & Controls
-function takeScreenshot() {
-  playAudio(1500, 0.15);
-  html2canvas(document.body).then(canvas => {
-    const link = document.createElement('a');
-    link.download = 'cyber-hud-screenshot.png';
-    link.href = canvas.toDataURL();
-    link.click();
-    gestureStatus.innerText = "স্ক্রিনশট সেভ করা হয়েছে!";
-  });
+// Top Box Control Actions
+function openYouTube() {
+  playSound(950, 0.08);
+  keyboardContainer.classList.add('hidden');
+  browserFrame.classList.remove('hidden');
+  browserFrame.src = "https://m.youtube.com/";
 }
 
 function executeSearch() {
-  playAudio(900, 0.08);
+  playSound(900, 0.08);
   const query = cyberInput.value.trim();
   if (query) {
-    cyberInput.classList.add('hidden');
     keyboardContainer.classList.add('hidden');
     browserFrame.classList.remove('hidden');
-    // Embedded Web Search
     browserFrame.src = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
-  } else {
-    alert("অনুগ্রহ করে সার্চ করার জন্য কিছু লিখুন!");
   }
 }
 
-function openYouTube() {
-  playAudio(1000, 0.08);
-  cyberInput.classList.add('hidden');
-  keyboardContainer.classList.add('hidden');
-  browserFrame.classList.remove('hidden');
-  // Embedded YouTube inside top screen
-  browserFrame.src = "https://www.youtube.com/embed?listType=search&list=cyberpunk";
+function takeScreenshot() {
+  playSound(1400, 0.12);
+  html2canvas(document.body).then(canvas => {
+    const a = document.createElement('a');
+    a.download = 'cyber-hud-screenshot.png';
+    a.href = canvas.toDataURL();
+    a.click();
+  });
 }
 
 function showDevInfo() {
-  playAudio(1100, 0.1, 'triangle');
+  playSound(1100, 0.08);
   devModal.style.display = 'flex';
 }
 
 function hideDevInfo() {
-  playAudio(400, 0.05);
+  playSound(400, 0.05);
   devModal.style.display = 'none';
 }
 
-// Camera Engine Setup
+// High Speed Optimized Camera Frame Feed
 const camera = new Camera(videoElement, {
   onFrame: async () => {
     canvasElement.width = videoElement.videoWidth;
