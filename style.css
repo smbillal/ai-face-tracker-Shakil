@@ -1,49 +1,49 @@
 :root {
   --neon-cyan: #00f3ff;
   --neon-pink: #ff0055;
-  --neon-green: #00ff66;
-  --cyber-bg: #03050a;
-  --card-bg: rgba(6, 11, 25, 0.88);
+  --bright-yellow: #ffeb3b;
+  --cyber-bg: #04060c;
+  --card-bg: rgba(8, 12, 26, 0.92);
 }
 
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Courier New', monospace;
+  font-family: 'Segoe UI', Tahoma, monospace;
   user-select: none;
 }
 
 html, body {
   width: 100vw;
   height: 100vh;
-  overflow: hidden; /* ব্যাকগ্রাউন্ড স্ক্রোলিং পুরোপুরি বন্ধ */
+  overflow: hidden;
   background-color: var(--cyber-bg);
   color: var(--neon-cyan);
 }
 
-/* Air-Touch Cursor */
-#cyberCursor {
+/* High Visibility Yellow Cursor */
+#yellowCursor {
   position: fixed;
-  width: 22px;
-  height: 22px;
-  border: 2px solid var(--neon-pink);
+  width: 24px;
+  height: 24px;
+  background: var(--bright-yellow);
+  border: 2px solid #ff5722;
   border-radius: 50%;
-  background: rgba(0, 243, 255, 0.3);
+  box-shadow: 0 0 15px var(--bright-yellow), 0 0 30px var(--bright-yellow);
   pointer-events: none;
-  z-index: 10000;
+  z-index: 99999;
   transform: translate(-50%, -50%);
-  box-shadow: 0 0 10px var(--neon-pink), inset 0 0 8px var(--neon-cyan);
-  transition: transform 0.05s ease-out;
+  transition: transform 0.03s linear;
 }
 
-#cyberCursor.pinched {
-  background: var(--neon-green);
-  border-color: var(--neon-green);
+#yellowCursor.pinched {
+  background: #00ff66;
+  border-color: #ffffff;
   transform: translate(-50%, -50%) scale(0.6);
+  box-shadow: 0 0 20px #00ff66;
 }
 
-/* Main Screen Fit Layout */
 .cyber-container {
   display: flex;
   flex-direction: column;
@@ -56,17 +56,17 @@ html, body {
   background: var(--card-bg);
   border: 1px solid var(--neon-cyan);
   border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
+  box-shadow: 0 0 12px rgba(0, 243, 255, 0.25);
   position: relative;
 }
 
 /* Top Section Structure */
 .top-box {
-  flex: 1;
+  flex: 1.2;
   display: flex;
   flex-direction: column;
   padding: 8px;
-  gap: 6px;
+  gap: 8px;
   overflow: hidden;
 }
 
@@ -75,13 +75,12 @@ html, body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(0, 243, 255, 0.3);
-  padding-bottom: 4px;
+  padding-bottom: 5px;
 }
 
 .tool-title {
   font-size: 13px;
   font-weight: bold;
-  letter-spacing: 1px;
 }
 
 .btn-group {
@@ -104,70 +103,91 @@ html, body {
   color: #000;
 }
 
-/* Screen / Browser Frame */
-.display-container {
-  flex: 1;
-  position: relative;
-  width: 100%;
+/* Compact Google-Style Search Bar */
+.search-bar-container {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  background: #02040a;
+  border: 1.5px solid var(--neon-pink);
+  border-radius: 20px;
+  padding: 4px 12px;
+  gap: 8px;
+  box-shadow: inset 0 0 8px rgba(255, 0, 85, 0.2);
 }
 
-.cyber-iframe {
-  width: 100%;
-  height: 100%;
-  border: 1px solid var(--neon-cyan);
-  border-radius: 4px;
-  background: #fff;
+.search-icon {
+  font-size: 14px;
 }
 
 #cyberInput {
-  width: 100%;
-  height: 100%;
-  background: #02040a;
-  border: 1px solid var(--neon-pink);
+  flex: 1;
+  background: transparent;
+  border: none;
   color: #fff;
-  padding: 8px;
-  font-size: 14px;
-  border-radius: 4px;
-  resize: none;
+  font-size: 13px;
   outline: none;
+  padding: 4px;
 }
 
-/* Virtual Cyber Keyboard */
+.search-go-btn {
+  background: var(--neon-pink);
+  color: #fff;
+  border: none;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Digital Keyboard */
 .cyber-keyboard {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
   gap: 4px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.85);
   padding: 6px;
-  border-radius: 4px;
-  border: 1px solid var(--neon-cyan);
+  border-radius: 6px;
+  border: 1px solid var(--bright-yellow);
 }
 
 .key-btn {
-  background: #0c1226;
+  background: #0d142b;
   color: var(--neon-cyan);
   border: 1px solid rgba(0, 243, 255, 0.4);
   padding: 8px 0;
   text-align: center;
-  border-radius: 3px;
-  font-size: 12px;
+  border-radius: 4px;
+  font-size: 11px;
   font-weight: bold;
 }
 
-.key-btn:active, .key-btn.active {
-  background: var(--neon-pink);
-  color: #fff;
+.key-btn:active {
+  background: var(--bright-yellow);
+  color: #000;
 }
 
 .hidden {
   display: none !important;
 }
 
-/* Bottom Section (Tracker + Matrix) */
+.viewport-container {
+  flex: 1;
+  position: relative;
+  width: 100%;
+}
+
+.cyber-iframe {
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--neon-cyan);
+  border-radius: 6px;
+  background: #fff;
+}
+
+/* Bottom Lock Bounded Box */
 .bottom-box {
-  height: 45vh;
+  flex: 1;
+  max-height: 42vh;
   overflow: hidden;
 }
 
@@ -186,7 +206,7 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.35;
+  opacity: 0.3;
   z-index: 1;
 }
 
@@ -205,19 +225,20 @@ html, body {
   top: 8px;
   left: 8px;
   z-index: 3;
-  background: rgba(0, 0, 0, 0.75);
+  background: rgba(0, 0, 0, 0.8);
   padding: 4px 8px;
-  border-left: 3px solid var(--neon-pink);
+  border-left: 3px solid var(--bright-yellow);
   font-size: 11px;
   display: flex;
   flex-direction: column;
 }
 
-.pulse {
-  color: var(--neon-green);
+.pulse-text {
+  color: var(--bright-yellow);
+  font-weight: bold;
 }
 
-/* Glitch Modal Animation */
+/* Developer Info Modal */
 .modal {
   display: none;
   position: fixed;
@@ -228,20 +249,22 @@ html, body {
   background: rgba(0, 0, 0, 0.85);
   justify-content: center;
   align-items: center;
-  z-index: 20000;
+  z-index: 100000;
 }
 
-.glitch-border {
-  animation: cyberPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  border: 2px solid var(--neon-pink);
-  box-shadow: 0 0 20px var(--neon-pink);
+.glitch-box {
+  animation: popup 0.25s ease-out;
+  border: 2px solid var(--bright-yellow);
+  box-shadow: 0 0 20px var(--bright-yellow);
+  padding: 20px;
+  max-width: 380px;
+  width: 90%;
+  text-align: center;
 }
 
-.glitch-title {
-  font-size: 16px;
-  font-weight: bold;
-  color: var(--neon-pink);
-  text-shadow: 2px 2px var(--neon-cyan);
+.cyber-title {
+  color: var(--bright-yellow);
+  font-size: 15px;
   margin-bottom: 10px;
 }
 
@@ -253,7 +276,13 @@ html, body {
   margin-bottom: 12px;
 }
 
-@keyframes cyberPop {
-  0% { transform: scale(0.5); opacity: 0; }
+.close-btn {
+  border-color: var(--neon-pink);
+  color: var(--neon-pink);
+  width: 100%;
+}
+
+@keyframes popup {
+  0% { transform: scale(0.6); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
   }
