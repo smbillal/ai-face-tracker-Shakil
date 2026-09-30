@@ -1,9 +1,9 @@
 :root {
   --neon-cyan: #00f3ff;
   --neon-pink: #ff0055;
-  --bright-yellow: #ffeb3b;
-  --cyber-bg: #04060c;
-  --card-bg: rgba(8, 12, 26, 0.92);
+  --bright-yellow: #ffea00;
+  --cyber-bg: #03060e;
+  --card-bg: rgba(6, 10, 22, 0.95);
 }
 
 * {
@@ -22,52 +22,55 @@ html, body {
   color: var(--neon-cyan);
 }
 
-/* High Visibility Yellow Cursor */
+/* Smooth Yellow Cursor */
 #yellowCursor {
   position: fixed;
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   background: var(--bright-yellow);
-  border: 2px solid #ff5722;
+  border: 2px solid #ff3d00;
   border-radius: 50%;
-  box-shadow: 0 0 15px var(--bright-yellow), 0 0 30px var(--bright-yellow);
+  box-shadow: 0 0 12px var(--bright-yellow), 0 0 25px var(--bright-yellow);
   pointer-events: none;
-  z-index: 99999;
+  z-index: 999999;
   transform: translate(-50%, -50%);
-  transition: transform 0.03s linear;
+  transition: width 0.1s, height 0.1s, background-color 0.1s;
 }
 
 #yellowCursor.pinched {
   background: #00ff66;
   border-color: #ffffff;
-  transform: translate(-50%, -50%) scale(0.6);
+  width: 12px;
+  height: 12px;
   box-shadow: 0 0 20px #00ff66;
 }
 
+/* Container Grid System: Exactly 50% Top and 50% Bottom */
 .cyber-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 8px;
-  gap: 8px;
+  padding: 6px;
+  gap: 6px;
 }
 
 .cyber-card {
   background: var(--card-bg);
-  border: 1px solid var(--neon-cyan);
+  border: 1.5px solid var(--neon-cyan);
   border-radius: 8px;
-  box-shadow: 0 0 12px rgba(0, 243, 255, 0.25);
+  box-shadow: 0 0 10px rgba(0, 243, 255, 0.2);
   position: relative;
+  overflow: hidden;
 }
 
-/* Top Section Structure */
-.top-box {
-  flex: 1.2;
+/* Top & Bottom equal sizing */
+.top-box, .bottom-box {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 8px;
-  gap: 8px;
-  overflow: hidden;
+  min-height: 0; 
+  padding: 6px;
+  gap: 6px;
 }
 
 .cyber-tools {
@@ -75,48 +78,42 @@ html, body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(0, 243, 255, 0.3);
-  padding-bottom: 5px;
+  padding-bottom: 4px;
 }
 
 .tool-title {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: bold;
 }
 
 .btn-group {
   display: flex;
-  gap: 5px;
+  gap: 4px;
 }
 
 .cyber-btn {
   background: rgba(0, 243, 255, 0.1);
   color: var(--neon-cyan);
   border: 1px solid var(--neon-cyan);
-  padding: 4px 8px;
+  padding: 3px 8px;
   font-size: 11px;
   border-radius: 4px;
   cursor: pointer;
 }
 
-.cyber-btn:active {
-  background: var(--neon-cyan);
-  color: #000;
-}
-
-/* Compact Google-Style Search Bar */
+/* Compact Search Bar */
 .search-bar-container {
   display: flex;
   align-items: center;
-  background: #02040a;
+  background: #010308;
   border: 1.5px solid var(--neon-pink);
-  border-radius: 20px;
-  padding: 4px 12px;
-  gap: 8px;
-  box-shadow: inset 0 0 8px rgba(255, 0, 85, 0.2);
+  border-radius: 18px;
+  padding: 3px 10px;
+  gap: 6px;
 }
 
 .search-icon {
-  font-size: 14px;
+  font-size: 12px;
 }
 
 #cyberInput {
@@ -124,41 +121,43 @@ html, body {
   background: transparent;
   border: none;
   color: #fff;
-  font-size: 13px;
+  font-size: 12px;
   outline: none;
-  padding: 4px;
 }
 
-.search-go-btn {
+.cyber-action-btn {
   background: var(--neon-pink);
   color: #fff;
   border: none;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 12px;
+  font-size: 11px;
   font-weight: bold;
   cursor: pointer;
 }
 
-/* Digital Keyboard */
+/* Full A-Z Keyboard Grid Layout */
 .cyber-keyboard {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 4px;
-  background: rgba(0, 0, 0, 0.85);
+  gap: 3px;
+  background: rgba(0, 0, 0, 0.9);
   padding: 6px;
   border-radius: 6px;
   border: 1px solid var(--bright-yellow);
+  z-index: 10;
 }
 
 .key-btn {
-  background: #0d142b;
+  background: #091024;
   color: var(--neon-cyan);
-  border: 1px solid rgba(0, 243, 255, 0.4);
-  padding: 8px 0;
+  border: 1px solid rgba(0, 243, 255, 0.3);
+  padding: 6px 0;
   text-align: center;
   border-radius: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
+  cursor: pointer;
 }
 
 .key-btn:active {
@@ -172,25 +171,21 @@ html, body {
 
 .viewport-container {
   flex: 1;
-  position: relative;
   width: 100%;
+  height: 100%;
+  position: relative;
+  min-height: 0;
 }
 
 .cyber-iframe {
   width: 100%;
   height: 100%;
   border: 1px solid var(--neon-cyan);
-  border-radius: 6px;
-  background: #fff;
+  border-radius: 4px;
+  background: #111;
 }
 
-/* Bottom Lock Bounded Box */
-.bottom-box {
-  flex: 1;
-  max-height: 42vh;
-  overflow: hidden;
-}
-
+/* Bottom Bounded Camera Container */
 .video-container {
   position: relative;
   width: 100%;
@@ -206,7 +201,7 @@ html, body {
   left: 0;
   width: 100%;
   height: 100%;
-  opacity: 0.3;
+  opacity: 0.25;
   z-index: 1;
 }
 
@@ -222,13 +217,13 @@ html, body {
 
 .tracking-overlay {
   position: absolute;
-  top: 8px;
-  left: 8px;
+  top: 6px;
+  left: 6px;
   z-index: 3;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.85);
   padding: 4px 8px;
   border-left: 3px solid var(--bright-yellow);
-  font-size: 11px;
+  font-size: 10px;
   display: flex;
   flex-direction: column;
 }
@@ -238,7 +233,7 @@ html, body {
   font-weight: bold;
 }
 
-/* Developer Info Modal */
+/* Modal UI */
 .modal {
   display: none;
   position: fixed;
@@ -246,43 +241,36 @@ html, body {
   left: 0;
   width: 100vw;
   height: 100vh;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0,0,0,0.85);
   justify-content: center;
   align-items: center;
-  z-index: 100000;
+  z-index: 1000000;
 }
 
-.glitch-box {
-  animation: popup 0.25s ease-out;
-  border: 2px solid var(--bright-yellow);
-  box-shadow: 0 0 20px var(--bright-yellow);
-  padding: 20px;
-  max-width: 380px;
-  width: 90%;
+.modal-content {
+  border: 1.5px solid var(--bright-yellow);
+  padding: 16px;
+  max-width: 320px;
+  width: 85%;
   text-align: center;
 }
 
 .cyber-title {
   color: var(--bright-yellow);
-  font-size: 15px;
-  margin-bottom: 10px;
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 
 .dev-details {
   text-align: left;
-  line-height: 1.8;
+  line-height: 1.6;
   color: #fff;
-  font-size: 13px;
-  margin-bottom: 12px;
+  font-size: 12px;
+  margin-bottom: 10px;
 }
 
 .close-btn {
+  width: 100%;
   border-color: var(--neon-pink);
   color: var(--neon-pink);
-  width: 100%;
-}
-
-@keyframes popup {
-  0% { transform: scale(0.6); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-                   }
+  }
