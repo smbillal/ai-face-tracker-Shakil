@@ -3,80 +3,77 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Cyber HUD Pro - Shakil</title>
+  <title>Cyber HUD v4.0 - Ultra Engine</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- MediaPipe AI High-Speed Libraries -->
+  <!-- MediaPipe High Performance Engine -->
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 
-  <!-- Bright Yellow Air-Touch Cursor -->
+  <!-- Smooth Yellow Air Cursor -->
   <div id="yellowCursor"></div>
 
-  <div class="cyber-container" id="captureTarget">
+  <div class="cyber-container">
     
-    <!-- TOP SECTION: Compact Search Bar & Viewer -->
+    <!-- TOP BOX: Search, Keyboard & Google/YouTube Display (Equal Height 50%) -->
     <div class="top-box cyber-card">
       <div class="cyber-tools">
-        <span class="tool-title">⚡ CYBER HUD v3.5</span>
+        <span class="tool-title">⚡ CYBER HUD v4.0</span>
         <div class="btn-group">
-          <button class="cyber-btn" onclick="takeScreenshot()">📸 স্ক্রিনশট</button>
-          <button class="cyber-btn" onclick="openYouTube()">▶️ YouTube</button>
+          <button class="cyber-btn" onclick="searchGoogle()">🔍 Google</button>
+          <button class="cyber-btn" onclick="openYouTubeEmbed()">▶️ YouTube</button>
           <button class="cyber-btn" onclick="showDevInfo()">👤 ডেভলপার</button>
         </div>
       </div>
 
-      <!-- Google-Style Compact Cyber Search Bar -->
+      <!-- Google Style Compact Search Bar -->
       <div class="search-bar-container">
-        <span class="search-icon">🔍</span>
-        <input type="text" id="cyberInput" placeholder="এখানে কারসর রাখলে কিবোর্ড ওপেন হবে..." autocomplete="off" readonly>
-        <button class="search-go-btn" onclick="executeSearch()">Go</button>
+        <span class="search-icon">🔎</span>
+        <input type="text" id="cyberInput" placeholder="এখানে কারসর আনলে কিবোর্ড ওপেন হবে..." autocomplete="off" readonly>
+        <button class="cyber-action-btn" onclick="executeGoogleSearch()">Search</button>
       </div>
 
-      <!-- Digital Keyboard Container (Initially Hidden) -->
+      <!-- Full A-Z Cyber Virtual Keyboard -->
       <div class="cyber-keyboard hidden" id="keyboard"></div>
 
-      <!-- Browser / Youtube Viewport -->
+      <!-- Cyber Web Display Frame -->
       <div class="viewport-container">
-        <iframe id="browserFrame" src="about:blank" class="cyber-iframe hidden"></iframe>
+        <iframe id="browserFrame" class="cyber-iframe" src="about:blank"></iframe>
       </div>
     </div>
 
-    <!-- BOTTOM SECTION: Lock Bounded Box for Face/Hand Tracking -->
+    <!-- BOTTOM BOX: Face HUD & Camera Bounded Container (Equal Height 50%) -->
     <div class="bottom-box cyber-card">
       <div class="video-container">
-        <!-- Cyber Code Matrix Background Grid -->
         <canvas id="matrixCanvas"></canvas>
         <video id="webcam" autoplay playsinline muted></video>
         <canvas id="output_canvas"></canvas>
         <div class="tracking-overlay">
-          <span class="pulse-text">🟡 YELLOW AIR-CURSOR ACTIVE</span>
-          <span id="gesture-status">তর্জনী দিয়ে কারসর সরান | চিমটি দিয়ে ক্লিক</span>
+          <span class="pulse-text">🟡 SMOOTH AIR-CURSOR ACTIVE</span>
+          <span id="gesture-status">তর্জনী দিয়ে কারসর | চিমটি (Pinch) দিয়ে ক্লিক</span>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Animated Developer Info Modal -->
+  <!-- Developer Modal -->
   <div id="devModal" class="modal">
-    <div class="modal-content cyber-card glitch-box">
-      <h2 class="cyber-title">⚡ DEVELOPER PROFILE ⚡</h2>
+    <div class="modal-content cyber-card">
+      <h2 class="cyber-title">⚡ CYBER HUD DEVELOPER ⚡</h2>
       <div class="dev-details">
         <p><strong>ডেভলপার:</strong> Mohammad Billal Hossain (Shakil)</p>
-        <p><strong>ইমেইল:</strong> smshakilco@gmail.com</p>
-        <p><strong>ইঞ্জিন:</strong> MediaPipe Air-Touch Engine</p>
-        <p><strong>স্ট্যাটাস:</strong> High Performance Active</p>
+        <p><strong>ইঞ্জিন:</strong> AI Gesture Motion Engine 4.0</p>
+        <p><strong>স্ট্যাটাস:</strong> High Speed & Zero Auto-Click</p>
       </div>
-      <button class="cyber-btn close-btn" onclick="hideDevInfo()">[ X ] উইন্ডো বন্ধ করুন</button>
+      <button class="cyber-btn close-btn" onclick="hideDevInfo()">[ X ] বন্ধ করুন</button>
     </div>
   </div>
 
   <script src="script.js"></script>
 </body>
-      </html>
+</html>
