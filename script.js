@@ -212,3 +212,54 @@ function logoutUser() {
     });
   }
         }
+// Auto-start camera when DOM content is loaded
+window.addEventListener("DOMContentLoaded", () => {
+    startCamera();
+});
+
+// Initialize Camera Stream
+function startCamera() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "user",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        })
+        .then(function (stream) {
+            let videoElement = document.getElementById("webcam1");
+            if (videoElement) {
+                videoElement.srcObject = stream;
+                videoElement.play();
+            }
+        })
+        .catch(function (error) {
+            console.error("Camera access error:", error);
+            alert("Camera access denied. Please check your browser permissions.");
+        });
+    } else {
+        alert("Camera feature is not supported by your browser.");
+    }
+}
+
+// Toggle Fullscreen Mode on Tap/Click
+function toggleFullScreen(element) {
+    if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+        if (element.requestFullscreen) {
+            element.requestFullscreen();
+        } else if (element.webkitRequestFullscreen) {
+            element.webkitRequestFullscreen();
+        } else if (element.msRequestFullscreen) {
+            element.msRequestFullscreen();
+        }
+    } else {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+}
+
