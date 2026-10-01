@@ -1,4 +1,3 @@
-
 // Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
@@ -11,7 +10,7 @@ const firebaseConfig = {
   measurementId: "G-CEMEBF2DN5"
 };
 
-// Initialize Firebase App & Services
+// Initialize Firebase Application
 if (typeof firebase !== "undefined" && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -25,9 +24,9 @@ let speedAlertState = true;
 let voiceAlertState = false;
 let driverAlertState = true;
 
-// DOM Ready State Handler
+// DOM Ready Handler
 window.addEventListener("DOMContentLoaded", () => {
-    // Monitor Auth State
+    // Firebase Authentication State Observer
     if (auth) {
         auth.onAuthStateChanged((user) => {
             const authModal = document.getElementById("userAuthModal");
@@ -44,7 +43,7 @@ window.addEventListener("DOMContentLoaded", () => {
                 if (logoutBtn) logoutBtn.style.display = "inline-block";
                 
                 if (telemetryLog) {
-                    telemetryLog.innerText = `[AUTH SUCCESS] Logged in as: ${user.email} | Live Encryption active.`;
+                    telemetryLog.innerText = `[AUTH SUCCESS] Logged in as: ${user.email} | Telemetry Stream Active.`;
                 }
 
                 startCamera();
@@ -68,7 +67,7 @@ window.addEventListener("DOMContentLoaded", () => {
     startTimer();
 });
 
-// Authentication Tab Switcher (Login / Register / Reset)
+// Authentication Modal Tab Switcher (Login / Register / Reset)
 function switchTab(tabName) {
     const loginForm = document.getElementById("loginForm");
     const registerForm = document.getElementById("registerForm");
@@ -100,14 +99,14 @@ function switchTab(tabName) {
     }
 }
 
-// User Login Handler
+// User Login Function
 function loginUser() {
     const email = document.getElementById("loginEmail")?.value.trim();
     const password = document.getElementById("loginPassword")?.value.trim();
     const errorElem = document.getElementById("authError");
 
     if (!email || !password) {
-        if (errorElem) errorElem.innerText = "Please fill in both email and password.";
+        if (errorElem) errorElem.innerText = "Please enter both email and password.";
         return;
     }
 
@@ -122,14 +121,14 @@ function loginUser() {
         });
 }
 
-// User Registration Handler
+// User Registration Function
 function registerUser() {
     const email = document.getElementById("regEmail")?.value.trim();
     const password = document.getElementById("regPassword")?.value.trim();
     const errorElem = document.getElementById("authError");
 
     if (!email || !password) {
-        if (errorElem) errorElem.innerText = "Please provide both email and password.";
+        if (errorElem) errorElem.innerText = "Please enter both email and password.";
         return;
     }
 
@@ -144,28 +143,28 @@ function registerUser() {
         });
 }
 
-// Password Reset Request Handler
+// Password Reset Link Sender
 function resetPassword() {
     const email = document.getElementById("resetEmail")?.value.trim();
     const errorElem = document.getElementById("authError");
 
     if (!email) {
-        if (errorElem) errorElem.innerText = "Please enter your registered email.";
+        if (errorElem) errorElem.innerText = "Please enter your email address.";
         return;
     }
 
-    if (errorElem) errorElem.innerText = "Sending password reset link...";
+    if (errorElem) errorElem.innerText = "Sending reset link...";
 
     auth.sendPasswordResetEmail(email)
         .then(() => {
-            if (errorElem) errorElem.innerText = "Reset link sent! Please check your email inbox.";
+            if (errorElem) errorElem.innerText = "Password reset link sent to your email!";
         })
         .catch((error) => {
             if (errorElem) errorElem.innerText = getEnglishError(error.code);
         });
 }
 
-// Logout Handler
+// User Logout Function
 function logoutUser() {
     if (currentUser) {
         updateUserOnlineStatus(false);
@@ -173,25 +172,25 @@ function logoutUser() {
     if (auth) auth.signOut();
 }
 
-// English Authentication Error Format
+// Standard English Error Formatter
 function getEnglishError(code) {
     switch (code) {
         case 'auth/user-not-found':
             return "No account found with this email.";
         case 'auth/wrong-password':
-            return "Incorrect password entered.";
+            return "Incorrect password.";
         case 'auth/invalid-email':
-            return "Invalid email address format.";
+            return "Invalid email address.";
         case 'auth/email-already-in-use':
             return "This email is already registered.";
         case 'auth/weak-password':
-            return "Password should be at least 6 characters.";
+            return "Password must be at least 6 characters.";
         default:
-            return "Authentication failed. Please try again.";
+            return "Authentication error. Please try again.";
     }
 }
 
-// Update Realtime User Status in Firebase Realtime Database
+// Update Realtime Database Status
 function updateUserOnlineStatus(isOnline) {
     if (currentUser && database) {
         const userRef = database.ref("users/" + currentUser.uid);
@@ -211,7 +210,7 @@ function updateUserOnlineStatus(isOnline) {
     }
 }
 
-// Start Main Webcam Feed
+// Start User Front Webcam
 function startCamera() {
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         navigator.mediaDevices.getUserMedia({
@@ -226,16 +225,16 @@ function startCamera() {
             const videoElement = document.getElementById("webcam1");
             if (videoElement) {
                 videoElement.srcObject = stream;
-                videoElement.play().catch(e => console.log("Auto-play handling:", e));
+                videoElement.play().catch(e => console.log("Autoplay check:", e));
             }
         })
         .catch(function (error) {
-            console.error("Camera access error:", error);
+            console.error("Webcam stream access failed:", error);
         });
     }
 }
 
-// Toggle Grid Expansion (Box Zoom without breaking HUD Controls)
+// Toggle Grid Box Zoom (Without Breaking UI Controls)
 function toggleFullScreen(element) {
     const camBoxes = document.querySelectorAll('.cam-box');
     if (!camBoxes.length) return;
@@ -257,7 +256,7 @@ function toggleFullScreen(element) {
     }
 }
 
-// Grid Layout Switcher (1 Box / 2 Boxes / 4 Boxes)
+// Layout Switcher (1, 2, 4 Boxes)
 function setLayout(boxCount) {
     const camGrid = document.getElementById("camGrid");
     const layoutBtns = document.querySelectorAll(".layout-btn");
@@ -270,7 +269,7 @@ function setLayout(boxCount) {
     }
 }
 
-// HUD Controls & Features
+// Action Button Functions
 function toggleSpeedAlert() {
     speedAlertState = !speedAlertState;
     const btn = document.getElementById("speedAlertBtn");
@@ -299,7 +298,7 @@ function toggleRecord() {
     const recBtn = document.getElementById("recBtn");
     if (recBtn) {
         recBtn.innerText = isRecording ? "⏹️ Stop Rec" : "🔴 Quad Rec";
-        recBtn.style.background = isRecording ? "#ff0055" : "transparent";
+        recBtn.style.background = isRecording ? "#ff0055" : "rgba(0, 243, 255, 0.05)";
     }
 }
 
@@ -315,7 +314,7 @@ function selectCam(num) {
     });
 }
 
-// Simple Digital Clock Timer
+// Digital Clock
 function startTimer() {
     const timerDisplay = document.getElementById("timerDisplay");
     setInterval(() => {
@@ -324,4 +323,4 @@ function startTimer() {
             timerDisplay.innerText = now.toTimeString().split(' ')[0];
         }
     }, 1000);
-          }
+      }
