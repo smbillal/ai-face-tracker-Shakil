@@ -1,1 +1,118 @@
 
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Cyber HUD v17.0 - Private User Engine & Drive Integration</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#00f3ff">
+  <link rel="stylesheet" href="style.css?v=17.0">
+  
+  <!-- MediaPipe AI Libraries -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js" crossorigin="anonymous"></script>
+
+  <!-- Google Drive API Script -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Firebase Auth & DB -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+  <div id="yellowCursor"></div>
+
+  <!-- USER AUTHENTICATION MODAL (EMAIL / PHONE) -->
+  <div id="userAuthModal" class="modal" style="display: flex;">
+    <div class="modal-content cyber-card">
+      <h2 class="cyber-title">⚡ USER LOGIN / SIGN-UP</h2>
+      <p style="font-size: 9px; color:#aaa; margin-bottom: 8px;">International Mobile or Email Access</p>
+      <input type="text" id="userInputId" placeholder="Email or Phone (+8801...)" class="cyber-input">
+      <input type="password" id="userPassword" placeholder="Password" class="cyber-input">
+      <button class="cyber-btn" onclick="loginOrRegisterUser()">Sign In / Register</button>
+    </div>
+  </div>
+
+  <div class="cyber-container">
+    
+    <!-- TOP BOX -->
+    <div class="top-box cyber-card">
+      <div class="cyber-tools">
+        <span class="tool-title">⚡ CYBER HUD v17.0 (PRIVATE USER HUB)</span>
+        <div class="btn-group">
+          <button class="cyber-btn mirror-btn" onclick="toggleHUDMirror()">🪞 HUD Mirror</button>
+          <button class="cyber-btn rec-btn" id="recBtn" onclick="toggleScreenRecord()">🎥 Quad Rec</button>
+          <button class="cyber-btn snap-btn" onclick="captureTargetSnapshot()">📸 Snap</button>
+          <button class="cyber-btn xml-btn" onclick="uploadToGoogleDrive()">☁️ Google Drive</button>
+        </div>
+      </div>
+
+      <!-- CAMERA CONTROL BAR -->
+      <div class="cam-control-bar">
+        <button class="cam-toggle-btn active" id="btnCam1" onclick="toggleCameraChannel(1)">📹 Cam 1: Front</button>
+        <button class="cam-toggle-btn active" id="btnCam2" onclick="toggleCameraChannel(2)">📹 Cam 2: Rear</button>
+        <button class="cam-toggle-btn active" id="btnCam3" onclick="toggleCameraChannel(3)">📹 Cam 3: Inside</button>
+        <button class="cam-toggle-btn active" id="btnCam4" onclick="toggleCameraChannel(4)">📹 Cam 4: Driver</button>
+      </div>
+
+      <!-- DISPLAY GRID LAYOUT CONTROLLER -->
+      <div class="control-panel">
+        <span class="vision-label">📺 Layout:</span>
+        <button class="grid-btn" onclick="setGridLayout(1)">1 Box</button>
+        <button class="grid-btn" onclick="setGridLayout(2)">2 Boxes</button>
+        <button class="grid-btn active" onclick="setGridLayout(4)">4 Boxes</button>
+        
+        <!-- 100 KM/H SPEED ALERT USER TOGGLE BUTTON -->
+        <button class="control-btn active" id="speedAlertToggleBtn" onclick="toggleUserSpeedAlert()">⚠️ 100 KM/H Alert: ON</button>
+      </div>
+
+      <div class="vision-panel">
+        <button class="control-btn" id="voiceToggleBtn" onclick="toggleVoiceControl()">🎙️ বাংলা ভয়েস: OFF</button>
+        <button class="control-btn" id="drowsyToggleBtn" onclick="toggleDrowsinessAlert()">👁️ চালকের ঘুম সতর্কবার্তা: ON</button>
+      </div>
+
+      <!-- CONSOLE STREAM (ISOLATED - NO PUBLIC COUNTER) -->
+      <div class="console-container">
+        <div class="console-header">ISOLATED USER ENCRYPTION & GPS TELEMETRY</div>
+        <div id="codeLogConsole" class="code-log-console">
+          <div class="log-line text-cyan">[AUTH] Private User Session Active.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOTTOM BOX: QUAD CAMERA GRID -->
+    <div class="bottom-box cyber-card">
+      <div class="quad-grid-container grid-layout-4" id="quadGridContainer">
+        
+        <div class="cam-box" id="boxCam1"><canvas id="canvas1"></canvas></div>
+        <div class="cam-box" id="boxCam2"><canvas id="canvas2"></canvas></div>
+        <div class="cam-box" id="boxCam3"><canvas id="canvas3"></canvas></div>
+        <div class="cam-box" id="boxCam4"><canvas id="canvas4"></canvas></div>
+
+        <canvas id="masterRecordCanvas" class="hidden-video"></canvas>
+
+        <!-- Live Widget (User Privacy Protected - No Online User Count) -->
+        <div class="widget-overlay top-left">
+          <span id="timeWidget">⏱️ 00:00:00</span>
+          <span id="speedWidget" class="text-green">⚡ GPS: 0 KM/H</span>
+          <span id="gForceWidget" class="text-yellow">📐 G-FORCE: 1.0G</span>
+          <span id="speedWarningWidget" class="text-red hidden">🚨 SPEED > 100 KM/H!</span>
+        </div>
+
+        <div class="tracking-overlay bottom-left">
+          <span class="pulse-text" id="driverAlertText">🟢 DRIVER ALERT: ACTIVE</span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script src="script.js?v=17.0"></script>
+</body>
+    </html>
