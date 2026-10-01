@@ -10,191 +10,216 @@ const firebaseConfig = {
   measurementId: "G-CEMEBF2DN5"
 };
 
-// Initialize Firebase (v9 Compat)
-if (!firebase.apps.length) {
+// Initialize Firebase
+if (typeof firebase !== "undefined" && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
-const auth = firebase.auth();
-const database = firebase.database();
+const auth = typeof firebase !== "undefined" ? firebase.auth() : null;
+const database = typeof firebase !== "undefined" ? firebase.database() : null;
 
-let allUsersCache = {};
+let currentUser = null;
 
-// Monitor Admin Authentication State
-auth.onAuthStateChanged((user) => {
-    const authModal = document.getElementById("adminAuthModal");
-    const dashboard = document.getElementById("adminDashboard");
-    const adminEmailText = document.getElementById("currentAdminEmail");
-
-    if (user) {
-        if (authModal) authModal.style.display = "none";
-        if (dashboard) dashboard.classList.remove("hidden");
-        if (adminEmailText) adminEmailText.innerText = "Admin: " + user.email;
-        
-        // Start listening to live user telemetry stream
-        listenToUserTelemetry();
+// DOM Content Loaded Event Listener
+window.addEventListener("DOMContentLoaded", () => {
+    // Listen for Auth Changes
+    if (auth) {
+        auth.onAuthStateChanged((user) => {
+            const authModal = document.getElementById("userAuthModal") || document.getElementById("authModal");
+            
+            if (user) {
+                currentUser = user;
+                if (authModal) authModal.style.display = "none";
+                startCamera();
+                updateUserOnlineStatus(true);
+            } else {
+                currentUser = null;
+                if (authModal) authModal.style.display = "flex";
+            }
+        });
     } else {
-        if (authModal) authModal.style.display = "flex";
-        if (dashboard) dashboard.classList.add("hidden");
+        startCamera();
     }
 });
 
-// Multi-Admin Login Function
-function loginAdmin() {
-    const emailInput = document.getElementById("adminEmail");
-    const passwordInput = document.getElementById("adminPassword");
-    const errorElement = document.getElementById("adminAuthError");
+// Switch Auth Tabs (লগইন / নতুন একাউন্ট / পাসওয়ার্ড রিসেট)
+function switchTab(tabName) {
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const resetForm = document.getElementById("resetForm");
+    const errorElem = document.getElementById("authError") || document.getElementById("userAuthError");
 
-    const email = emailInput ? emailInput.value.trim() : "";
-    const password = passwordInput ? passwordInput.value.trim() : "";
+    if (errorElem) errorElem.innerText = "";
+
+    const tabs = document.querySelectorAll(".tab-btn, .auth-tab");
+    tabs.forEach(tab => tab.classList.remove("active"));
+
+    if (tabName === 'login') {
+        if (loginForm) loginForm.style.display = "block";
+        if (registerForm) registerForm.style.display = "none";
+        if (resetForm) resetForm.style.display = "none";
+    } else if (tabName === 'register') {
+        if (loginForm) loginForm.style.display = "none";
+        if (registerForm) registerForm.style.display = "block";
+        if (resetForm) resetForm.style.display = "none";
+    } else if (tabName === 'reset') {
+        if (loginForm) loginForm.style.display = "none";
+        if (registerForm) registerForm.style.display = "none";
+        if (resetForm) resetForm.style.display = "block";
+    }
+}
+
+// User Login
+function loginUser() {
+    const email = (document.getElementById("userEmail") || document.getElementById("loginEmail"))?.value.trim();
+    const password = (document.getElementById("userPassword") || document.getElementById("loginPassword"))?.value.trim();
+    const errorElem = document.getElementById("authError") || document.getElementById("userAuthError");
 
     if (!email || !password) {
-        if (errorElement) errorElement.innerText = "Please enter both email and password.";
+        if (errorElem) errorElem.innerText = "ইমেইল এবং পাসওয়ার্ড প্রদান করুন।";
         return;
     }
 
-    if (errorElement) errorElement.innerText = "Authenticating...";
+    if (errorElem) errorElem.innerText = "লগইন হচ্ছে...";
 
     auth.signInWithEmailAndPassword(email, password)
         .then(() => {
-            if (errorElement) errorElement.innerText = "";
+            if (errorElem) errorElem.innerText = "";
         })
         .catch((error) => {
-            if (errorElement) errorElement.innerText = "Login Failed: " + error.message;
+            if (errorElem) errorElem.innerText = "লগইন ব্যর্থ: " + getErrorMessage(error.code);
         });
 }
 
-// Admin Logout Function
-function logoutAdmin() {
-    auth.signOut().then(() => {
-        const errorElement = document.getElementById("adminAuthError");
-        if (errorElement) errorElement.innerText = "";
-    });
-}
+// User Registration
+function registerUser() {
+    const email = (document.getElementById("regEmail") || document.getElementById("registerEmail"))?.value.trim();
+    const password = (document.getElementById("regPassword") || document.getElementById("registerPassword"))?.value.trim();
+    const errorElem = document.getElementById("authError") || document.getElementById("userAuthError");
 
-// Realtime User Telemetry & Fleet Monitoring
-function listenToUserTelemetry() {
-    const userTableBody = document.getElementById("userMonitoringTableBody");
-    const totalUsersElem = document.getElementById("totalUsersCount");
-    const onlineUsersElem = document.getElementById("onlineUsersCount");
-    const crashAlertsElem = document.getElementById("crashAlertsCount");
-    const speedAlertsElem = document.getElementById("speedAlertsCount");
-
-    database.ref("users").on("value", (snapshot) => {
-        if (!userTableBody) return;
-        userTableBody.innerHTML = "";
-        
-        if (!snapshot.exists()) {
-            userTableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color:#888;">No active user telemetry records found.</td></tr>`;
-            if (totalUsersElem) totalUsersElem.innerText = "0";
-            if (onlineUsersElem) onlineUsersElem.innerText = "0";
-            if (crashAlertsElem) crashAlertsElem.innerText = "0";
-            if (speedAlertsElem) speedAlertsElem.innerText = "0";
-            allUsersCache = {};
-            return;
-        }
-
-        let usersData = snapshot.val();
-        allUsersCache = usersData;
-
-        let totalUsers = 0;
-        let onlineUsers = 0;
-        let crashAlerts = 0;
-        let speedAlerts = 0;
-
-        for (let uid in usersData) {
-            totalUsers++;
-            let user = usersData[uid] || {};
-
-            let isOnline = user.isOnline || false;
-            let currentSpeed = user.speed || 0;
-            let speedAlertActive = currentSpeed > 100;
-
-            if (isOnline) onlineUsers++;
-            if (user.impactDetected) crashAlerts++;
-            if (speedAlertActive) speedAlerts++;
-
-            let statusBadge = isOnline ? 
-                `<span class="badge" style="background:#00ff66; color:#000; padding:2px 6px; border-radius:3px;">ONLINE</span>` : 
-                `<span class="badge" style="background:#555; color:#fff; padding:2px 6px; border-radius:3px;">OFFLINE</span>`;
-
-            let impactBadge = user.impactDetected ? 
-                `<span style="color:#ff0055; font-weight:bold;">🚨 CRASH</span>` : 
-                `<span style="color:#00ff66;">NORMAL</span>`;
-
-            let speedBadge = speedAlertActive ? 
-                `<span style="color:#ffcc00; font-weight:bold;">⚠️ ${currentSpeed} KM/H</span>` : 
-                `<span>${currentSpeed} KM/H</span>`;
-
-            let row = `
-                <tr>
-                    <td><strong>${user.email || user.customId || uid}</strong></td>
-                    <td>${statusBadge}</td>
-                    <td>${speedBadge}</td>
-                    <td>${user.activeCams || 'Quad Feed'}</td>
-                    <td>${speedAlertActive ? 'YES' : 'NO'}</td>
-                    <td>${impactBadge}</td>
-                    <td>
-                        <button class="cyber-btn rec-btn" onclick="deleteUserRecord('${uid}')" style="padding: 2px 8px; font-size: 11px;">Remove</button>
-                    </td>
-                </tr>
-            `;
-            userTableBody.innerHTML += row;
-        }
-
-        if (totalUsersElem) totalUsersElem.innerText = totalUsers;
-        if (onlineUsersElem) onlineUsersElem.innerText = onlineUsers;
-        if (crashAlertsElem) crashAlertsElem.innerText = crashAlerts;
-        if (speedAlertsElem) speedAlertsElem.innerText = speedAlerts;
-    });
-}
-
-// Bulk Download User Data in JSON Format
-function bulkDownloadAllUserData() {
-    if (!allUsersCache || Object.keys(allUsersCache).length === 0) {
-        alert("No user telemetry data available to download.");
+    if (!email || !password) {
+        if (errorElem) errorElem.innerText = "সবগুলো ফিল্ড পূরণ করুন।";
         return;
     }
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(allUsersCache, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `DRIVEVISION_Telemetry_Backup_${new Date().toISOString().slice(0,10)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+
+    if (errorElem) errorElem.innerText = "একাউন্ট তৈরি হচ্ছে...";
+
+    auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+            if (errorElem) errorElem.innerText = "একাউন্ট সফলভাবে তৈরি হয়েছে!";
+        })
+        .catch((error) => {
+            if (errorElem) errorElem.innerText = "রেজিস্ট্রেশন ব্যর্থ: " + getErrorMessage(error.code);
+        });
 }
 
-// Bulk Download System Logs in XML Format
-function bulkDownloadSystemLogs() {
-    if (!allUsersCache || Object.keys(allUsersCache).length === 0) {
-        alert("No system logs available to download.");
+// Password Reset Link
+function resetPassword() {
+    const email = (document.getElementById("resetEmail"))?.value.trim();
+    const errorElem = document.getElementById("authError") || document.getElementById("userAuthError");
+
+    if (!email) {
+        if (errorElem) errorElem.innerText = "আপনার ইমেইল এড্রেসটি লিখুন।";
         return;
     }
-    let xmlContent = `<?xml version="1.0" encoding="UTF-8"?>\n<DriveVisionLogs timestamp="${new Date().toISOString()}">\n`;
-    for (let uid in allUsersCache) {
-        let user = allUsersCache[uid] || {};
-        xmlContent += `  <User id="${uid}">\n`;
-        xmlContent += `    <Email>${user.email || 'N/A'}</Email>\n`;
-        xmlContent += `    <Speed>${user.speed || 0}</Speed>\n`;
-        xmlContent += `    <Impact>${user.impactDetected || false}</Impact>\n`;
-        xmlContent += `  </User>\n`;
-    }
-    xmlContent += `</DriveVisionLogs>`;
 
-    const dataStr = "data:text/xml;charset=utf-8," + encodeURIComponent(xmlContent);
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `DRIVEVISION_SystemLogs_${new Date().toISOString().slice(0,10)}.xml`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    if (errorElem) errorElem.innerText = "রিসেট লিঙ্ক পাঠানো হচ্ছে...";
+
+    auth.sendPasswordResetEmail(email)
+        .then(() => {
+            if (errorElem) errorElem.innerText = "পাসওয়ার্ড রিসেট লিঙ্ক ইমেইলে পাঠানো হয়েছে।";
+        })
+        .catch((error) => {
+            if (errorElem) errorElem.innerText = "ব্যর্থ: " + getErrorMessage(error.code);
+        });
 }
 
-// Delete User Record
-function deleteUserRecord(uid) {
-    if (confirm("Are you sure you want to delete this user telemetry record?")) {
-        database.ref("users/" + uid).remove()
-        .then(() => alert("User record removed successfully."))
-        .catch((error) => alert("Error deleting user: " + error.message));
+// Logout User
+function logoutUser() {
+    if (currentUser) {
+        updateUserOnlineStatus(false);
+    }
+    if (auth) auth.signOut();
+}
+
+// Friendly Bangla Error Messages
+function getErrorMessage(code) {
+    switch (code) {
+        case 'auth/user-not-found':
+            return "এই ইমেইল দিয়ে কোনো একাউন্ট পাওয়া যায়নি।";
+        case 'auth/wrong-password':
+            return "ভুল পাসওয়ার্ড দেওয়া হয়েছে।";
+        case 'auth/invalid-email':
+            return "অকার্যকর ইমেইল এড্রেস।";
+        case 'auth/email-already-in-use':
+            return "এই ইমেইলটি ইতিমধ্যে ব্যবহার করা হয়েছে।";
+        case 'auth/weak-password':
+            return "পাসওয়ার্ড অন্তত ৬ অক্ষরের হতে হবে।";
+        default:
+            return "অনুগ্রহ করে আবার চেষ্টা করুন।";
+    }
+}
+
+// Update Realtime User Telemetry & Online Status
+function updateUserOnlineStatus(isOnline) {
+    if (currentUser && database) {
+        const userRef = database.ref("users/" + currentUser.uid);
+        if (isOnline) {
+            userRef.update({
+                email: currentUser.email,
+                isOnline: true,
+                lastActive: firebase.database.ServerValue.TIMESTAMP,
+                activeCams: "Quad Feed"
+            });
+            userRef.onDisconnect().update({ isOnline: false });
+        } else {
+            userRef.update({ isOnline: false });
+        }
+    }
+}
+
+// Initialize Camera Stream
+function startCamera() {
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+            video: {
+                facingMode: "user",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            },
+            audio: false
+        })
+        .then(function (stream) {
+            const videoElement = document.getElementById("webcam1") || document.querySelector("video");
+            if (videoElement) {
+                videoElement.srcObject = stream;
+                videoElement.play().catch(e => console.log("Auto-play restriction:", e));
+            }
+        })
+        .catch(function (error) {
+            console.error("Camera access error:", error);
+        });
+    }
+}
+
+// Expand single camera inside HUD Grid Box area (Without hiding HUD Controls)
+function toggleFullScreen(element) {
+    const camBoxes = document.querySelectorAll('.cam-box');
+    if (!camBoxes.length) return;
+
+    if (element.classList.contains('expanded-grid-box')) {
+        camBoxes.forEach(box => {
+            box.style.display = 'flex';
+            box.classList.remove('expanded-grid-box');
+        });
+    } else {
+        camBoxes.forEach(box => {
+            if (box === element) {
+                box.style.display = 'flex';
+                box.classList.add('expanded-grid-box');
+            } else {
+                box.style.display = 'none';
+            }
+        });
     }
 }
