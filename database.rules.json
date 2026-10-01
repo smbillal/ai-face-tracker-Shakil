@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || root.child('admins').hasChild(auth.uid))",
+        ".write": "auth != null && (auth.uid === $uid || root.child('admins').hasChild(auth.uid))"
+      }
+    },
+    "admins": {
+      ".read": "auth != null && root.child('admins').hasChild(auth.uid)",
+      ".write": "false"
+    }
+  }
+}
