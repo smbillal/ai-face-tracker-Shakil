@@ -1,10 +1,14 @@
 
 // FIREBASE INITIALIZATION & PERSISTENCE
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "cyber-hud-v15.firebaseapp.com",
-  databaseURL: "https://cyber-hud-v15-default-rtdb.firebaseio.com",
-  projectId: "cyber-hud-v15"
+  apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
+  authDomain: "road-traffic-data-8aec1.firebaseapp.com",
+  databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com",
+  projectId: "road-traffic-data-8aec1",
+  storageBucket: "road-traffic-data-8aec1.firebasestorage.app",
+  messagingSenderId: "714117386299",
+  appId: "1:714117386299:web:501fc2a8ac89a627af0c1e",
+  measurementId: "G-CEMEBF2DN5"
 };
 
 firebase.initializeApp(firebaseConfig);
