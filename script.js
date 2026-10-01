@@ -60,14 +60,14 @@ function registerUser() {
   const msg = document.getElementById('authMessage');
 
   if (!name || !contact || !pass || !country) {
-    msg.innerText = "⚠️ অনুগ্রহ করে সকল ঘর পূরণ করুন!";
+    msg.innerText = "⚠️ Please fill in all the fields.!";
     return;
   }
 
   const email = contact.includes('@') ? contact : `${contact.replace(/[^0-9]/g, '')}@cyberhud.com`;
   const uniqueId = generateUnique5DigitID();
 
-  msg.innerText = "⏳ অ্যাকাউন্ট তৈরি হচ্ছে...";
+  msg.innerText = "⏳ Account is being created....";
 
   auth.createUserWithEmailAndPassword(email, pass)
     .then((cred) => {
@@ -88,10 +88,10 @@ function registerUser() {
       return db.ref(`users/${uid}/profile`).set(profile);
     })
     .then(() => {
-      msg.innerText = "✅ রেজিস্ট্রেশন সফল হয়েছে!";
+      msg.innerText = "✅ Registration successful!";
     })
     .catch((err) => {
-      msg.innerText = "❌ ত্রুটি: " + err.message;
+      msg.innerText = "❌ Error: " + err.message;
     });
 }
 
@@ -102,19 +102,19 @@ function loginUser() {
   const msg = document.getElementById('authMessage');
 
   if (!contact || !pass) {
-    msg.innerText = "⚠️ ইমেইল/ফোন এবং পাসওয়ার্ড লিখুন!";
+    msg.innerText = "⚠️ Enter email/phone and password!";
     return;
   }
 
   const email = contact.includes('@') ? contact : `${contact.replace(/[^0-9]/g, '')}@cyberhud.com`;
-  msg.innerText = "⏳ যাচাই করা হচ্ছে...";
+  msg.innerText = "⏳ Verifying....";
 
   auth.signInWithEmailAndPassword(email, pass)
     .then(() => {
-      msg.innerText = "✅ লগইন সফল হয়েছে!";
+      msg.innerText = "✅ Login successful!";
     })
     .catch((err) => {
-      msg.innerText = "❌ ভুল তথ্য বা পাসওয়ার্ড: " + err.message;
+      msg.innerText = "❌ Incorrect information or password: " + err.message;
     });
 }
 
@@ -124,18 +124,18 @@ function resetUserPassword() {
   const msg = document.getElementById('authMessage');
 
   if (!email || !email.includes('@')) {
-    msg.innerText = "⚠️ সঠিক ইমেইল এড্রেস প্রদান করুন!";
+    msg.innerText = "⚠️ Please provide a valid email address!";
     return;
   }
 
-  msg.innerText = "⏳ পাসওয়ার্ড রিসেট ইমেইল পাঠানো হচ্ছে...";
+  msg.innerText = "⏳ Password reset email is being sent....";
 
   auth.sendPasswordResetEmail(email)
     .then(() => {
-      msg.innerText = "📧 আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে। চেক করুন!";
+      msg.innerText = "📧 A password reset link has been sent to your email. Please check!";
     })
     .catch((err) => {
-      msg.innerText = "❌ ত্রুটি: " + err.message;
+      msg.innerText = "❌ Error: " + err.message;
     });
 }
 
@@ -197,7 +197,7 @@ function saveProfileChanges() {
     name: newName,
     photoURL: newPhoto
   }).then(() => {
-    alert("✅ প্রোফাইল তথ্য সফলভাবে আপডেট হয়েছে!");
+    alert("✅ Profile information has been successfully updated.!");
     closeProfileModal();
   });
 }
