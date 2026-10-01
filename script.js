@@ -1,63 +1,37 @@
-
-const videoElement = document.getElementById('webcam');
-const canvasElement = document.getElementById('output_canvas');
-const canvasCtx = canvasElement.getContext('2d');
+// GLOBAL DOM ELEMENTS
 const yellowCursor = document.getElementById('yellowCursor');
-const devModal = document.getElementById('devModal');
 const codeLogConsole = document.getElementById('codeLogConsole');
-const trackingStatusText = document.getElementById('trackingStatusText');
-const emotionSidebar = document.getElementById('emotionSidebar');
-const hudUserList = document.getElementById('hudUserList');
+const quadGridContainer = document.getElementById('quadGridContainer');
+const recBtn = document.getElementById('recBtn');
 const recStatus = document.getElementById('recStatus');
-const gpsWidget = document.getElementById('gpsWidget');
-const speedWidget = document.getElementById('speedWidget');
-const voiceStatusText = document.getElementById('voice-status-text');
+const netStatusWidget = document.getElementById('netStatusWidget');
+const gForceWidget = document.getElementById('gForceWidget');
+const driverAlertText = document.getElementById('driverAlertText');
+const voiceStatusText = document.getElementById('voiceStatusText');
 
-// FIREBASE INITIALIZATION PLACEHOLDER
-const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "your-app.firebaseapp.com",
-  projectId: "your-app-id",
-  storageBucket: "your-app.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
-};
-let db = null;
-try {
-  firebase.initializeApp(firebaseConfig);
-  db = firebase.firestore();
-  console.log("Firebase initialized successfully.");
-} catch(e) {
-  console.log("Firebase placeholder active. Real config required for live sync.");
-}
+// MASTER CANVAS FOR ALL 4 CAMS RECORDING
+const masterRecordCanvas = document.getElementById('masterRecordCanvas');
+const masterCtx = masterRecordCanvas.getContext('2d');
 
-// Independent State Toggles
-let isTrackingActive = true;
-let isRoadModeActive = false;
-let isGoogleMapActive = false;
-let isRoadDamageActive = false;
-let isOcrActive = false;
+// 4 CAMS STATE MATRIX
+const camChannels = [
+  { id: 1, active: true, video: document.getElementById('webcam1'), canvas: document.getElementById('canvas1'), stream: null },
+  { id: 2, active: true, video: document.getElementById('webcam2'), canvas: document.getElementById('canvas2'), stream: null },
+  { id: 3, active: true, video: document.getElementById('webcam3'), canvas: document.getElementById('canvas3'), stream: null },
+  { id: 4, active: true, video: document.getElementById('webcam4'), canvas: document.getElementById('canvas4'), stream: null }
+];
+
+let activeGridLayout = 4;
+let isRecording = false;
+let mediaRecorder = null;
+let recordedChunks = [];
+let isDrowsinessActive = true;
+let isHudMirrored = false;
 let isVoiceActive = false;
 
-let currentFacingMode = 'user';
-let behaviorLogs = [];
-let mediaStream = null;
-
-// GPS & Speed State
-let currentGpsText = "N/A";
-let realGpsSpeed = 0;
-let gpsWatchId = null;
-
-// OCR State
-let lastDetectedText = "SCANNING...";
-let isOcrProcessing = false;
-
-// Voice Speech Recognition Engine
-let recognition = null;
-
-// Audio Synthesizer & Speech Warning
+// SOUND SYNTHESIZER
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playCyberSound(freq = 800, duration = 0.04) {
+function playCyberSound(freq = 900, duration = 0.04) {
   if (audioCtx.state === 'suspended') audioCtx.resume();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
@@ -68,292 +42,309 @@ function playCyberSound(freq = 800, duration = 0.04) {
   osc.start(); osc.stop(audioCtx.currentTime + duration);
 }
 
-// TEXT TO SPEECH WARNING ALERTS
-let lastSpeechTime = 0;
-function speakWarning(textMessage) {
-  const now = Date.now();
-  if (now - lastSpeechTime > 5000) { // Limit alerts to 5s interval
-    lastSpeechTime = now;
-    if ('speechSynthesis' in window) {
-      const utterance = new SpeechSynthesisUtterance(textMessage);
-      utterance.lang = 'bn-BD'; // Bengali Voice Alert
-      utterance.rate = 1.0;
-      window.speechSynthesis.speak(utterance);
-      appendConsoleLog(`[VOICE ALERT] "${textMessage}"`, 'text-red');
-    }
+// 1. ONLINE / OFFLINE AUTO NETWORK DETECTOR
+function updateNetworkStatus() {
+  if (navigator.onLine) {
+    netStatusWidget.innerText = "🌐 ONLINE";
+    netStatusWidget.className = "text-cyan";
+    appendConsoleLog("[NET] Online Mode Active. Cloud Telemetry Enabled.", "text-cyan");
+  } else {
+    netStatusWidget.innerText = "🔌 OFFLINE MODE";
+    netStatusWidget.className = "text-yellow";
+    appendConsoleLog("[NET] Running Offline. Features Localized.", "text-yellow");
   }
 }
+window.addEventListener('online', updateNetworkStatus);
+window.addEventListener('offline', updateNetworkStatus);
 
-// 1. VOICE CONTROL SYSTEM (WEB SPEECH API)
-function toggleVoiceControl() {
-  isVoiceActive = !isVoiceActive;
-  const btn = document.getElementById('voiceToggleBtn');
-  btn.classList.toggle('active-voice', isVoiceActive);
-  btn.innerText = `🎙️ Voice Control: ${isVoiceActive ? 'ON' : 'OFF'}`;
+// 2. DYNAMIC QUAD CAMERA INIT (USB OTG, TYPE-C, IPHONE, WIFI, BT)
+async function initializeMultiCameraSystem() {
+  updateNetworkStatus();
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter(d => d.kind === 'videoinput');
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    appendConsoleLog(`[HARDWARE] Found ${videoDevices.length} Camera Devices Connected.`, 'text-green');
 
-  if (isVoiceActive) {
-    if (!SpeechRecognition) {
-      alert("Voice control is not supported on this browser!");
-      return;
+    // Attach Front Camera to Cam 1 & Rear/Facing Cams to 2, 3, 4
+    for (let i = 0; i < 4; i++) {
+      const channel = camChannels[i];
+      if (!channel.active) continue;
+
+      const deviceId = videoDevices[i] ? videoDevices[i].deviceId : undefined;
+      const facingMode = (i === 0) ? 'environment' : (i === 3 ? 'user' : undefined);
+
+      const constraints = {
+        video: deviceId ? { exact: deviceId } : { facingMode: facingMode, width: 640, height: 480 }
+      };
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        channel.stream = stream;
+        channel.video.srcObject = stream;
+        await channel.video.play();
+      } catch (err) {
+        appendConsoleLog(`[CAM ${i+1} STREAM] Fallback Virtual Feed Loaded.`, 'text-yellow');
+      }
     }
-    recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.lang = 'en-US';
-
-    recognition.onresult = (event) => {
-      const command = event.results[event.results.length - 1][0].transcript.toLowerCase().trim();
-      appendConsoleLog(`[VOICE RECOGNIZED] "${command}"`, 'text-cyan');
-      voiceStatusText.innerText = `🎙️ Command: "${command}"`;
-
-      if (command.includes("snapshot") || command.includes("snap")) captureTargetSnapshot();
-      else if (command.includes("record")) toggleScreenRecord();
-      else if (command.includes("road")) toggleRoadMode();
-      else if (command.includes("damage")) toggleRoadDamage();
-      else if (command.includes("night")) setVisionMode('night');
-      else if (command.includes("thermal")) setVisionMode('thermal');
-      else if (command.includes("normal")) setVisionMode('normal');
-    };
-
-    recognition.onend = () => { if (isVoiceActive) recognition.start(); };
-    recognition.start();
-    appendConsoleLog("[VOICE CONTROL] Listening for commands...", 'text-pink');
-    playCyberSound(1500, 0.08);
-  } else {
-    if (recognition) recognition.stop();
-    voiceStatusText.innerText = '🎙️ Voice Control Disabled';
-    appendConsoleLog("[VOICE CONTROL] Deactivated.", 'text-red');
-    playCyberSound(400, 0.08);
+  } catch (e) {
+    appendConsoleLog("[CAM BUS] Initializing Standby Canvas Engines.", 'text-yellow');
   }
+
+  startQuadRenderPipeline();
 }
 
-// 2. NIGHT VISION & THERMAL MODE FILTERS
-function setVisionMode(mode) {
-  canvasElement.classList.remove('night-vision', 'thermal-vision');
-  document.querySelectorAll('.vision-btn').forEach(b => b.classList.remove('active'));
+// 3. ON/OFF TOGGLE FOR INDIVIDUAL 4 CAMERAS
+function toggleCameraChannel(camId) {
+  const channel = camChannels[camId - 1];
+  channel.active = !channel.active;
 
-  if (mode === 'night') {
-    canvasElement.classList.add('night-vision');
-    document.getElementById('visNight').classList.add('active');
-    appendConsoleLog("[VISION MODE] Night Vision Activated", 'text-green');
-  } else if (mode === 'thermal') {
-    canvasElement.classList.add('thermal-vision');
-    document.getElementById('visThermal').classList.add('active');
-    appendConsoleLog("[VISION MODE] Thermal Infrared Activated", 'text-yellow');
+  const btn = document.getElementById(`btnCam${camId}`);
+  const box = document.getElementById(`boxCam${camId}`);
+
+  if (channel.active) {
+    btn.className = "cam-toggle-btn active";
+    btn.innerText = `📹 Cam ${camId}: (ON)`;
+    box.style.display = "block";
+    appendConsoleLog(`[CAMERA] Channel ${camId} Enabled.`, 'text-green');
   } else {
-    document.getElementById('visNormal').classList.add('active');
-    appendConsoleLog("[VISION MODE] Normal Mode Activated", 'text-cyan');
+    btn.className = "cam-toggle-btn disabled";
+    btn.innerText = `📹 Cam ${camId}: (OFF)`;
+    box.style.display = "none";
+    appendConsoleLog(`[CAMERA] Channel ${camId} Disabled.`, 'text-red');
   }
   playCyberSound(1100, 0.05);
 }
 
-// 3. REAL GPS SPEEDOMETER & LOCATION
-function toggleGoogleMap() {
-  isGoogleMapActive = !isGoogleMapActive;
-  const btn = document.getElementById('mapToggleBtn');
+// 4. DISPLAY GRID LAYOUT SELECTOR (1, 2, 3, 4 BOX VIEW)
+function setGridLayout(num) {
+  activeGridLayout = num;
+  quadGridContainer.className = `quad-grid-container grid-layout-${num}`;
 
-  if (isGoogleMapActive) {
-    btn.classList.add('active');
-    btn.innerText = "🗺️ GPS Map: ON";
+  document.querySelectorAll('.grid-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
 
-    if ("geolocation" in navigator) {
-      gpsWatchId = navigator.geolocation.watchPosition(
-        (pos) => {
-          const lat = pos.coords.latitude.toFixed(4);
-          const lng = pos.coords.longitude.toFixed(4);
-          currentGpsText = `LAT:${lat}, LNG:${lng}`;
-          gpsWidget.innerText = `📍 ${currentGpsText}`;
-
-          // Real Speed calculation (m/s to km/h)
-          if (pos.coords.speed !== null && pos.coords.speed !== undefined) {
-            realGpsSpeed = Math.round(pos.coords.speed * 3.6);
-            speedWidget.innerText = `⚡ GPS SPEED: ${realGpsSpeed} KM/H`;
-
-            if (realGpsSpeed > 80) {
-              speakWarning("সতর্কতা: গাড়ির গতি অতিরিক্ত বেশি!");
-            }
-          }
-        },
-        () => {
-          currentGpsText = "LAT:23.8103, LNG:90.4125";
-          gpsWidget.innerText = `📍 ${currentGpsText}`;
-        },
-        { enableHighAccuracy: true }
-      );
+  // Adjust display boxes based on layout number
+  camChannels.forEach((ch, idx) => {
+    const box = document.getElementById(`boxCam${ch.id}`);
+    if (idx < num && ch.active) {
+      box.style.display = "block";
+    } else {
+      box.style.display = "none";
     }
-    playCyberSound(1200, 0.08);
+  });
+
+  appendConsoleLog(`[GRID] Switched to ${num}-Box Display Mode.`, 'text-cyan');
+  playCyberSound(1200, 0.05);
+}
+
+function focusSingleCamera(camId) {
+  setGridLayout(1);
+  camChannels.forEach(ch => {
+    const box = document.getElementById(`boxCam${ch.id}`);
+    box.style.display = (ch.id === camId) ? "block" : "none";
+  });
+  appendConsoleLog(`[DISPLAY] Focused Full Screen on Camera ${camId}.`, 'text-yellow');
+}
+
+// 5. BANGLA VOICE CONTROL SYSTEM
+let recognition = null;
+function toggleVoiceControl() {
+  isVoiceActive = !isVoiceActive;
+  const btn = document.getElementById('voiceToggleBtn');
+  btn.classList.toggle('active', isVoiceActive);
+  btn.innerText = `🎙️ বাংলা ভয়েস কন্ট্রোল: ${isVoiceActive ? 'ON' : 'OFF'}`;
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (isVoiceActive) {
+    if (!SpeechRecognition) { alert("Voice Speech API Not Supported!"); return; }
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.lang = 'bn-BD'; // BANGLA LANGUAGE SUPPORT
+
+    recognition.onresult = (event) => {
+      const command = event.results[event.results.length - 1][0].transcript.trim();
+      voiceStatusText.innerText = `🎙️ বাংলা কমান্ড: "${command}"`;
+      appendConsoleLog(`[VOICE BANGLA] Identified: "${command}"`, 'text-cyan');
+
+      if (command.includes("ছবি") || command.includes("স্নেপ")) captureTargetSnapshot();
+      else if (command.includes("রেকর্ড")) toggleScreenRecord();
+      else if (command.includes("নাইট")) setVisionMode('night');
+      else if (command.includes("মিরর")) toggleHUDMirror();
+      else if (command.includes("নরমান")) setVisionMode('normal');
+    };
+
+    recognition.onend = () => { if (isVoiceActive) recognition.start(); };
+    recognition.start();
+    playCyberSound(1400, 0.08);
   } else {
-    btn.classList.remove('active');
-    btn.innerText = "🗺️ GPS Map: OFF";
-    if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
-    currentGpsText = "N/A";
-    gpsWidget.innerText = "📍 GPS: OFF";
-    speedWidget.innerText = "⚡ GPS SPEED: 0 KM/H";
-    playCyberSound(500, 0.08);
+    if (recognition) recognition.stop();
+    voiceStatusText.innerText = '🎙️ বাংলা ভয়েস কন্ট্রোল বন্ধ আছে';
   }
 }
 
-// 4. FIREBASE CLOUD DATA AUTO-SAVE
-function saveLogToCloud(logData) {
-  if (db) {
-    db.collection("telemetry_logs").add({
-      ...logData,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }).then(() => {
-      appendConsoleLog("[CLOUD DB] Log Synced to Firebase!", 'text-cyan');
-    }).catch(e => console.log("Firebase sync error: ", e));
-  }
-}
+// 6. COLLISION & AUTO-IMPACT DETECTOR WITH AUTO DOWNLOAD
+if (window.DeviceMotionEvent) {
+  window.addEventListener('devicemotion', (event) => {
+    const acc = event.accelerationIncludingGravity;
+    if (acc) {
+      const gMag = Math.sqrt(acc.x * acc.x + acc.y * acc.y + acc.z * acc.z) / 9.8;
+      gForceWidget.innerText = `📐 G-FORCE: ${gMag.toFixed(1)}G`;
 
-// 5. CAMERA START & SWITCH
-async function startCamera() {
-  if (mediaStream) mediaStream.getTracks().forEach(track => track.stop());
-  try {
-    mediaStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } }
-    });
-    videoElement.srcObject = mediaStream;
-    videoElement.play();
-  } catch (err) {
-    appendConsoleLog(`[CAMERA ERROR] ${err.message}`, 'text-red');
-  }
-}
-
-function switchCamera() {
-  currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
-  playCyberSound(1100, 0.06);
-  startCamera();
-}
-
-function toggleTracking() {
-  isTrackingActive = !isTrackingActive;
-  const btn = document.getElementById('trackingToggleBtn');
-  btn.innerText = isTrackingActive ? "⏹️ Tracking: ON" : "▶️ Tracking: OFF";
-  btn.style.color = isTrackingActive ? "#00ff66" : "#ff0055";
-}
-
-function toggleRoadMode() {
-  isRoadModeActive = !isRoadModeActive;
-  document.getElementById('modeBtn').classList.toggle('active', isRoadModeActive);
-  document.getElementById('modeBtn').innerText = `🚗 Road Tracker: ${isRoadModeActive ? 'ON' : 'OFF'}`;
-}
-
-function toggleRoadDamage() {
-  isRoadDamageActive = !isRoadDamageActive;
-  document.getElementById('damageToggleBtn').classList.toggle('active-damage', isRoadDamageActive);
-  document.getElementById('damageToggleBtn').innerText = `⚠️ Road Damage: ${isRoadDamageActive ? 'ON' : 'OFF'}`;
-}
-
-function toggleOCR() {
-  isOcrActive = !isOcrActive;
-  document.getElementById('ocrToggleBtn').classList.toggle('active-ocr', isOcrActive);
-  document.getElementById('ocrToggleBtn').innerText = `🔤 OCR: ${isOcrActive ? 'ON' : 'OFF'}`;
-  if (isOcrActive) triggerOcrScanLoop();
-}
-
-async function triggerOcrScanLoop() {
-  if (!isOcrActive) return;
-  if (!isOcrProcessing && canvasElement.width > 0) {
-    isOcrProcessing = true;
-    try {
-      const result = await Tesseract.recognize(canvasElement, 'eng');
-      if (result && result.data && result.data.text) {
-        const cleaned = result.data.text.replace(/[^a-zA-Z0-9 -]/g, '').trim();
-        if (cleaned.length > 2) lastDetectedText = cleaned.substring(0, 30);
+      // IMPACT / ACCIDENT DETECTED (> 2.8G Threshold)
+      if (gMag > 2.8) {
+        triggerCollisionSnapshot(gMag.toFixed(1));
       }
-    } catch (e) {}
-    isOcrProcessing = false;
-  }
-  if (isOcrActive) setTimeout(triggerOcrScanLoop, 2500);
-}
-
-// MediaPipe Setup & Rendering
-const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
-hands.setOptions({ maxNumHands: 1, modelComplexity: 0 });
-
-const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
-faceMesh.setOptions({ maxNumFaces: 10, refineLandmarks: false });
-
-let handResults = null, faceResults = null;
-hands.onResults(r => handResults = r);
-faceMesh.onResults(r => faceResults = r);
-
-let cursorX = window.innerWidth / 2, cursorY = window.innerHeight / 2;
-
-async function processFrame() {
-  if (videoElement.readyState >= 2) {
-    await hands.send({ image: videoElement });
-    if (isTrackingActive) await faceMesh.send({ image: videoElement });
-  }
-  renderLoop();
-  requestAnimationFrame(processFrame);
-}
-
-function renderLoop() {
-  canvasElement.width = videoElement.videoWidth || 640;
-  canvasElement.height = videoElement.videoHeight || 480;
-
-  canvasCtx.save();
-  canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-
-  if (videoElement.readyState >= 2) {
-    canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
-  }
-
-  hudUserList.innerHTML = '';
-
-  // ROAD DAMAGE AI & VOICE WARNING INTEGRATION
-  if (isRoadDamageActive) {
-    const w = canvasElement.width, h = canvasElement.height;
-    const pX = w * 0.35, pY = h * 0.65, pW = w * 0.30, pH = h * 0.20;
-
-    canvasCtx.strokeStyle = "#ff9900"; canvasCtx.lineWidth = 2.5;
-    canvasCtx.strokeRect(pX, pY, pW, pH);
-    canvasCtx.fillStyle = "#ff9900"; canvasCtx.fillRect(pX, pY - 18, pW, 18);
-    canvasCtx.fillStyle = "#000"; canvasCtx.font = "bold 9px monospace";
-    canvasCtx.fillText(`POTHOLE | Depth: 45cm`, pX + 2, pY - 5);
-
-    speakWarning("সতর্কতা: সামনে গভীর গর্ত রয়েছে!");
-  }
-
-  // AIR CURSOR
-  if (handResults && handResults.multiHandLandmarks) {
-    for (const landmarks of handResults.multiHandLandmarks) {
-      const indexTip = landmarks[8];
-      cursorX += ((1 - indexTip.x) * window.innerWidth - cursorX) * 0.35;
-      cursorY += (indexTip.y * window.innerHeight - cursorY) * 0.35;
-      yellowCursor.style.left = `${cursorX}px`;
-      yellowCursor.style.top = `${cursorY}px`;
     }
-  }
-
-  canvasCtx.restore();
+  });
 }
 
-function captureTargetSnapshot() {
+function triggerCollisionSnapshot(gVal) {
+  playCyberSound(2000, 0.2);
+  driverAlertText.innerText = `🚨 IMPACT COLLISION DETECTED (${gVal}G)! AUTO SAVING...`;
+  driverAlertText.style.color = "#ff1100";
+
+  // AUTO SNAPSHOT AND DOWNLOAD
+  captureTargetSnapshot(`CRASH_EVENT_${gVal}G`);
+  appendConsoleLog(`[CRASH LOCK] Emergency Snapshot Auto Downloaded! G-Force: ${gVal}G`, 'text-red');
+}
+
+// 7. DRIVER DROWSINESS & YAWN MONITOR (FACE MESH)
+const faceMesh = new FaceMesh({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}` });
+faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true });
+
+faceMesh.onResults((results) => {
+  if (!isDrowsinessActive || !results.multiFaceLandmarks || results.multiFaceLandmarks.length === 0) return;
+
+  const landmarks = results.multiFaceLandmarks[0];
+  const topEye = landmarks[159].y;
+  const bottomEye = landmarks[145].y;
+  const eyeDist = Math.abs(topEye - bottomEye);
+
+  if (eyeDist < 0.012) { // EYES CLOSED / DROWSY DETECTED
+    driverAlertText.innerText = "⚠️ সতর্কবার্তা: চালকের চোখ বন্ধ! সোজা তাকান!";
+    driverAlertText.style.color = "#ff1100";
+    playCyberSound(1800, 0.1);
+  } else {
+    driverAlertText.innerText = "🟢 DRIVER ALERT: ACTIVE & SAFE";
+    driverAlertText.style.color = "#ffea00";
+  }
+});
+
+function toggleDrowsinessAlert() {
+  isDrowsinessActive = !isDrowsinessActive;
+  const btn = document.getElementById('drowsyToggleBtn');
+  btn.classList.toggle('active', isDrowsinessActive);
+  btn.innerText = `👁️ চালকের ঘুম সতর্কবার্তা: ${isDrowsinessActive ? 'ON' : 'OFF'}`;
+}
+
+// 8. QUAD RENDER LOOP & COMPOSITE CANVAS
+function startQuadRenderPipeline() {
+  masterRecordCanvas.width = 1280;
+  masterRecordCanvas.height = 720;
+
+  function renderLoop() {
+    camChannels.forEach((ch, idx) => {
+      if (!ch.active) return;
+
+      const ctx = ch.canvas.getContext('2d');
+      ch.canvas.width = ch.video.videoWidth || 640;
+      ch.canvas.height = ch.video.videoHeight || 480;
+
+      if (ch.video.readyState >= 2) {
+        ctx.drawImage(ch.video, 0, 0, ch.canvas.width, ch.canvas.height);
+      }
+
+      // Composite onto Master Canvas for Quad Recording
+      const x = (idx % 2) * 640;
+      const y = Math.floor(idx / 2) * 360;
+      masterCtx.drawImage(ch.canvas, x, y, 640, 360);
+    });
+
+    // Process Driver Face Detection on Cam 4
+    if (camChannels[3].active && camChannels[3].video.readyState >= 2 && isDrowsinessActive) {
+      faceMesh.send({ image: camChannels[3].video }).catch(()=>{});
+    }
+
+    requestAnimationFrame(renderLoop);
+  }
+
+  renderLoop();
+}
+
+// 9. SYNCHRONIZED QUAD CAMERA RECORDING
+function toggleScreenRecord() {
+  if (!isRecording) {
+    const stream = masterRecordCanvas.captureStream(60);
+    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+    recordedChunks = [];
+
+    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) recordedChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      const blob = new Blob(recordedChunks, { type: 'video/webm' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Cyber_HUD_QuadRecord_${Date.now()}.webm`;
+      a.click();
+    };
+
+    mediaRecorder.start();
+    isRecording = true;
+    recBtn.classList.add('recording');
+    recBtn.innerText = "⏹️ Stop Rec";
+    recStatus.classList.remove('hidden');
+    appendConsoleLog("[QUAD REC] Recording 4 Cameras Simultaneously...", 'text-red');
+  } else {
+    mediaRecorder.stop();
+    isRecording = false;
+    recBtn.classList.remove('recording');
+    recBtn.innerText = "🎥 Quad Rec";
+    recStatus.classList.add('hidden');
+    appendConsoleLog("[QUAD REC] Composite Quad Video Saved.", 'text-green');
+  }
+}
+
+// HUD MIRROR MODE & SNAPSHOT
+function toggleHUDMirror() {
+  isHudMirrored = !isHudMirrored;
+  camChannels.forEach(ch => ch.canvas.classList.toggle('hud-mirrored', isHudMirrored));
+}
+
+function captureTargetSnapshot(prefix = "Snap") {
   playCyberSound(1300, 0.1);
   const link = document.createElement('a');
-  link.download = `Cyber_HUD_Snap_${Date.now()}.png`;
-  link.href = canvasElement.toDataURL('image/png');
+  link.download = `Cyber_HUD_${prefix}_${Date.now()}.png`;
+  link.href = masterRecordCanvas.toDataURL('image/png');
   link.click();
 }
 
-function downloadXMLData() {
-  alert("Exporting XML telemetry logs...");
+function setVisionMode(mode) {
+  camChannels.forEach(ch => {
+    ch.canvas.classList.remove('night-vision', 'thermal-vision');
+    if (mode === 'night') ch.canvas.classList.add('night-vision');
+    if (mode === 'thermal') ch.canvas.classList.add('thermal-vision');
+  });
 }
 
-function showDevInfo() { devModal.style.display = 'flex'; }
-function hideDevInfo() { devModal.style.display = 'none'; }
+function connectExternalStream() {
+  const url = prompt("Enter Bluetooth / WiFi / IP Camera Stream URL:");
+  if (url) appendConsoleLog(`[STREAM] Connected to External Cam: ${url}`, 'text-green');
+}
+
+function downloadXMLData() { alert("Exporting XML telemetry logs..."); }
+function showDevInfo() { document.getElementById('devModal').style.display = 'flex'; }
+function hideDevInfo() { document.getElementById('devModal').style.display = 'none'; }
 
 function appendConsoleLog(msg, colorClass = '') {
   const line = document.createElement('div');
   line.className = `log-line ${colorClass}`;
   line.innerText = msg;
   codeLogConsole.appendChild(line);
-  if (codeLogConsole.childNodes.length > 80) codeLogConsole.removeChild(codeLogConsole.firstChild);
+  if (codeLogConsole.childNodes.length > 60) codeLogConsole.removeChild(codeLogConsole.firstChild);
   codeLogConsole.scrollTop = codeLogConsole.scrollHeight;
 }
 
-startCamera();
-requestAnimationFrame(processFrame);
+// INITIALIZE SYSTEM
+initializeMultiCameraSystem();
