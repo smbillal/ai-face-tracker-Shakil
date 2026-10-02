@@ -1,1 +1,81 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRIVEVISION AI - Enterprise Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+</head>
+<body class="admin-body">
+
+    <!-- Admin Top Header -->
+    <header class="cyber-header">
+        <div class="logo-area">
+            <i class="fa-solid fa-user-shield"></i>
+            <span>DRIVEVISION <small>ADMIN PORTAL</small></span>
+        </div>
+        <div>
+            <a href="index.html" class="cyber-btn blue"><i class="fa-solid fa-house"></i> Return to Dashboard</a>
+        </div>
+    </header>
+
+    <main class="app-container" style="padding:20px;">
+        <!-- System Analytics Cards -->
+        <section class="toolbar" style="margin-bottom:20px;">
+            <div class="cyber-panel" style="flex:1;">
+                <h4>Total Registered Users</h4>
+                <h2 id="totalUsersCount" style="color:var(--color-green)">1</h2>
+            </div>
+            <div class="cyber-panel" style="flex:1;">
+                <h4>Active Camera Channels</h4>
+                <h2 style="color:var(--color-blue)">20 Channels</h2>
+            </div>
+            <div class="cyber-panel" style="flex:1;">
+                <h4>Server Status</h4>
+                <h2 style="color:var(--color-yellow)">ONLINE (0.2ms)</h2>
+            </div>
+        </section>
+
+        <!-- Registered Users Data Table -->
+        <section class="cyber-panel" style="margin-bottom:20px;">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-users-gear"></i> User Directory & Profile Directory</h3>
+                <button class="cyber-btn gold" onclick="refreshAdminData()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table style="width:100%; text-align:left; border-collapse:collapse;" id="userTable">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border-cyan); color:var(--color-blue);">
+                            <th style="padding:10px;">Unique ID</th>
+                            <th>Full Name</th>
+                            <th>Country</th>
+                            <th>Age</th>
+                            <th>Phone</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userTableBody">
+                        <!-- User Rows Rendered Dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Live Admin Telemetry Feed Monitor -->
+        <section class="cyber-panel">
+            <div class="panel-header">
+                <h3><i class="fa-solid fa-microchip"></i> System Monitoring & Global Telemetry Stream</h3>
+            </div>
+            <div class="telemetry-list" id="adminTelemetryFeed">
+                <p style="color:#aaa;">Loading real-time global telemetry feed...</p>
+            </div>
+        </section>
+    </main>
+
+    <script src="admin.js"></script>
+</body>
+              </html>
