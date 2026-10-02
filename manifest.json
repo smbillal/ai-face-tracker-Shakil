@@ -1,1 +1,16 @@
-
+{
+  "name": "DRIVEVISION AI - Cyber HUD Dashboard",
+  "short_name": "DRIVEVISION",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#05070a",
+  "theme_color": "#05070a",
+  "description": "Next-Gen AI Fleet Management & Dashboard System",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/2554/2554936.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
