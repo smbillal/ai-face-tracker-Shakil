@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveVision AI Dashboard - Fully Integrated</title>
+    <title>DriveVision AI Dashboard - Fully Optimized</title>
     
     <!-- Leaflet CSS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -32,10 +32,11 @@
         body {
             background-color: var(--bg-color);
             color: var(--text-color);
-            padding-bottom: 90px;
+            padding-bottom: 90px; /* Space for fixed footer */
             overflow-x: hidden;
         }
 
+        /* Top Navbar */
         header {
             background: #070a12;
             padding: 12px 20px;
@@ -56,8 +57,7 @@
         .nav-tools {
             display: flex;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .btn {
@@ -77,16 +77,18 @@
         }
 
         .btn-admin {
-            display: none; /* Hide by default, show ONLY for smshakilco@gmail.com */
+            display: none; /* Default Hidden, visible only for Admin */
             background: #ff4757;
             border-color: #ff6b81;
         }
 
+        /* Main Grid Layout */
         .container {
             padding: 15px;
             max-width: 100%;
         }
 
+        /* Responsive Camera Grid */
         .camera-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -121,7 +123,7 @@
             object-fit: cover;
         }
 
-        /* Toggle Switches */
+        /* Switch Styling */
         .switch {
             position: relative;
             display: inline-block;
@@ -149,6 +151,7 @@
         input:checked + .slider { background-color: var(--accent-color); }
         input:checked + .slider:before { transform: translateX(16px); }
 
+        /* Dashboard Lower Panel */
         .panel-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -169,6 +172,7 @@
             margin-top: 10px;
         }
 
+        /* Ad Slots Container */
         .ad-container {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -188,6 +192,7 @@
             border-radius: 6px;
         }
 
+        /* Fixed Sticky Footer */
         footer {
             position: fixed;
             bottom: 0;
@@ -212,6 +217,7 @@
             color: var(--accent-color);
         }
 
+        /* Admin Modal */
         .modal {
             display: none;
             position: fixed;
@@ -228,7 +234,7 @@
             border: 1px solid var(--accent-color);
             padding: 20px;
             border-radius: 10px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             max-height: 85vh;
             overflow-y: auto;
@@ -236,7 +242,7 @@
 
         textarea {
             width: 100%;
-            height: 65px;
+            height: 70px;
             background: #070a12;
             color: #00f2fe;
             border: 1px solid var(--border-color);
@@ -247,6 +253,7 @@
             margin-bottom: 10px;
         }
 
+        /* Offline Indicator */
         .offline-badge {
             display: none;
             background: #ff4757;
@@ -259,6 +266,7 @@
 </head>
 <body>
 
+    <!-- Header Navigation -->
     <header>
         <div class="brand">DRIVEVISION AI <span style="font-size: 12px; color: #888;">v18.0</span></div>
         
@@ -268,13 +276,13 @@
             <button class="btn" onclick="testRearCam()">Test Rear Cam</button>
             <button class="btn" onclick="startGridRecording()">Record Grid</button>
             <button id="adminBtn" class="btn btn-admin" onclick="toggleAdminPanel()">Admin Panel</button>
-            <button id="authBtn" class="btn" onclick="openAuthModal()">Login / Register</button>
+            <button id="authBtn" class="btn" onclick="handleAuth()">Login</button>
         </div>
     </header>
 
     <div class="container">
         
-        <!-- Cameras Grid -->
+        <!-- Camera Grid System -->
         <div class="camera-grid">
             <div class="cam-box" id="box1">
                 <div class="cam-header">
@@ -329,12 +337,12 @@
             <div class="ad-box" id="adSlot4"><span style="color:#555;">Ad Slot 4</span></div>
         </div>
 
-        <!-- Lower Panels -->
+        <!-- Lower Panels (Live Data & Satellite GPS Map) -->
         <div class="panel-grid">
             <div class="panel-card">
                 <h3>Live Tracking Monitor (ALPR & Speed)</h3>
                 <div id="trackingLogs" style="margin-top: 10px; font-size: 13px; color: #00f2fe;">
-                    <div>• Real-time camera streams active...</div>
+                    <div>• Searching real-time streams...</div>
                 </div>
             </div>
 
@@ -354,7 +362,7 @@
         <div class="modal-content">
             <h2 style="color: var(--accent-color); margin-bottom: 15px;">Admin Control Panel</h2>
             
-            <h4>Custom Ad Management (Paste HTML / JS)</h4>
+            <h4>Manage Custom Ad Codes (HTML / JS Script)</h4>
             <label style="font-size: 12px;">Ad Slot 1 Code:</label>
             <textarea id="ad1Input" placeholder="Paste HTML / JS Code here..."></textarea>
             
@@ -367,26 +375,12 @@
             <label style="font-size: 12px;">Ad Slot 4 Code:</label>
             <textarea id="ad4Input" placeholder="Paste HTML / JS Code here..."></textarea>
 
-            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="saveAdSettings()">Save Ads & Publish</button>
+            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="saveAdSettings()">Save Ads & Update Layout</button>
             <button class="btn" style="width: 100%; margin-top: 8px; background: #334155;" onclick="toggleAdminPanel()">Close Panel</button>
         </div>
     </div>
 
-    <!-- Auth Modal (Login / Register / Forgot Password) -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <h3 style="color: var(--accent-color); margin-bottom: 15px;" id="authTitle">User Authentication</h3>
-            <input type="email" id="authEmail" placeholder="Enter Email" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #070a12; color: #fff; border: 1px solid var(--border-color); border-radius: 5px;">
-            <input type="password" id="authPassword" placeholder="Enter Password" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #070a12; color: #fff; border: 1px solid var(--border-color); border-radius: 5px;">
-            
-            <button class="btn" style="width: 100%; margin-bottom: 8px;" onclick="submitLogin()">Login</button>
-            <button class="btn" style="width: 100%; margin-bottom: 8px; background: #00b894; border-color: #55efc4;" onclick="submitRegister()">Register (Single Account)</button>
-            <button class="btn" style="width: 100%; margin-bottom: 8px; background: #fdcb6e; color: #000;" onclick="submitForgotPassword()">Forgot Password? (OTP / Reset Link)</button>
-            <button class="btn" style="width: 100%; background: #334155;" onclick="closeAuthModal()">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Fixed Footer -->
+    <!-- Fixed Sticky Footer -->
     <footer>
         <div class="footer-text">
             Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
@@ -397,26 +391,26 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // --- 1. YOUR LIVE FIREBASE CONFIGURATION ---
+                // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
             authDomain: "road-traffic-data-8aec1.firebaseapp.com",
-            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com",
+            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com", // ডাটাবেজ কাজ করার জন্য এটি বাধ্যতামূলক
             projectId: "road-traffic-data-8aec1",
             storageBucket: "road-traffic-data-8aec1.firebasestorage.app",
             messagingSenderId: "714117386299",
             appId: "1:714117386299:web:501fc2a8ac89a627af0c1e",
             measurementId: "G-CEMEBF2DN5"
         };
-        
+
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Ensure session remains active across server updates
+        // Keep User Session Logged In Even Across Server Updates
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-        const ADMIN_EMAIL = "smshakilco@gmail.com";
+        const ADMIN_EMAIL = "smshakilco@gmail.com"; // Your Admin Email
 
         auth.onAuthStateChanged(user => {
             const authBtn = document.getElementById('authBtn');
@@ -424,61 +418,36 @@
 
             if (user) {
                 authBtn.innerText = "Logout (" + user.email.split('@')[0] + ")";
-                authBtn.onclick = () => auth.signOut();
                 
-                // Show Admin Panel ONLY for smshakilco@gmail.com
+                // Show Admin Button ONLY for the Master Admin Email
                 if (user.email === ADMIN_EMAIL) {
                     adminBtn.style.display = "inline-block";
                 } else {
                     adminBtn.style.display = "none";
                 }
             } else {
-                authBtn.innerText = "Login / Register";
-                authBtn.onclick = () => openAuthModal();
+                authBtn.innerText = "Login";
                 adminBtn.style.display = "none";
             }
         });
 
-        // --- AUTHENTICATION FUNCTIONS ---
-        function openAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-        }
-
-        function submitLogin() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => closeAuthModal())
-                .catch(err => alert("Login Error: " + err.message));
-        }
-
-        function submitRegister() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    alert("Registration Successful!");
-                    closeAuthModal();
-                })
-                .catch(err => alert("Registration Error: " + err.message));
-        }
-
-        function submitForgotPassword() {
-            const email = document.getElementById('authEmail').value;
-            if (!email) {
-                alert("Please enter your email to reset password.");
-                return;
+        function handleAuth() {
+            if (auth.currentUser) {
+                auth.signOut();
+            } else {
+                const email = prompt("Enter Email:");
+                const password = prompt("Enter Password:");
+                if (email && password) {
+                    auth.signInWithEmailAndPassword(email, password).catch(err => {
+                        if (confirm("Login Failed. Do you want to Register with this Email?")) {
+                            auth.createUserWithEmailAndPassword(email, password).catch(e => alert(e.message));
+                        }
+                    });
+                }
             }
-            auth.sendPasswordResetEmail(email)
-                .then(() => alert("Password reset link / OTP has been sent to your email."))
-                .catch(err => alert("Error: " + err.message));
         }
 
-        // --- 2. CAMERA CONTROLS ---
+        // --- 2. REAR CAMERA TESTING (ENVIRONMENT FACING) ---
         async function testRearCam() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -486,7 +455,10 @@
                 });
                 document.getElementById('video1').srcObject = stream;
             } catch (err) {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                // Fallback to default rear environment cam
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "environment" }
+                });
                 document.getElementById('video1').srcObject = stream;
             }
         }
@@ -501,19 +473,23 @@
             }
         }
 
-        // --- 3. SATELLITE GPS MAP ---
+        // --- 3. SATELLITE MAP & REAL-TIME GPS ---
         let map, marker, watchId;
         
         function initMap() {
+            // Default center: Saudi Arabia / Dhaka
             map = L.map('map').setView([21.4858, 39.1925], 15);
 
+            // Google Satellite Tile Layer
             L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
                 maxZoom: 20,
                 subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
                 attribution: 'Map data &copy; Google Satellite'
             }).addTo(map);
 
-            marker = L.marker([21.4858, 39.1925]).addTo(map).bindPopup('Vehicle Location');
+            marker = L.marker([21.4858, 39.1925]).addTo(map)
+                .bindPopup('Current GPS Location')
+                .openPopup();
 
             startGPS();
         }
@@ -521,7 +497,10 @@
         function startGPS() {
             if (navigator.geolocation) {
                 watchId = navigator.geolocation.watchPosition(pos => {
-                    const latlng = [pos.coords.latitude, pos.coords.longitude];
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+                    const latlng = [lat, lng];
+                    
                     marker.setLatLng(latlng);
                     map.panTo(latlng);
                 }, err => console.log(err), { enableHighAccuracy: true });
@@ -532,10 +511,10 @@
             if (watchId) {
                 navigator.geolocation.clearWatch(watchId);
                 watchId = null;
-                alert("GPS Tracking Paused");
+                alert("GPS Tracking Disabled");
             } else {
                 startGPS();
-                alert("GPS Tracking Activated");
+                alert("GPS Tracking Enabled");
             }
         }
 
@@ -544,7 +523,7 @@
             loadAdSettings();
         };
 
-        // --- 4. OFFLINE RECORDING SYSTEM ---
+        // --- 4. OFFLINE & COMBINED GRID RECORDING ---
         let mediaRecorder;
         let recordedChunks = [];
 
@@ -559,7 +538,7 @@
         function startGridRecording() {
             const video1 = document.getElementById('video1');
             if (!video1.srcObject) {
-                alert("Please turn on Rear Cam to test recording.");
+                alert("Please enable at least Rear Cam to test recording.");
                 return;
             }
 
@@ -577,18 +556,20 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = url;
-                a.download = `DriveVision_Recording_${Date.now()}.webm`;
+                a.download = `DriveVision_Record_${Date.now()}.webm`;
                 document.body.appendChild(a);
                 a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 100);
             };
 
             mediaRecorder.start();
-            alert("Recording Started! Stopping and Downloading in 5 seconds...");
-            setTimeout(() => mediaRecorder.stop(), 5000);
+            alert("Recording started! Click OK to stop and download after 5 seconds.");
+            setTimeout(() => {
+                mediaRecorder.stop();
+            }, 5000);
         }
 
-        // --- 5. AD MANAGER FOR ADMIN ---
+        // --- 5. ADMIN CUSTOM AD MANAGER ---
         function toggleAdminPanel() {
             const modal = document.getElementById('adminModal');
             modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
@@ -603,16 +584,18 @@
             const ads = { ad1, ad2, ad3, ad4 };
             localStorage.setItem('drivevision_ads', JSON.stringify(ads));
 
+            // Optional: Save to Firebase so all users receive the ads
             if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
                 db.ref('ads').set(ads);
             }
 
             renderAds(ads);
             toggleAdminPanel();
-            alert("Ads Updated Successfully!");
+            alert("Ad Slots Updated Successfully!");
         }
 
         function loadAdSettings() {
+            // Load from LocalStorage or Firebase
             const savedAds = localStorage.getItem('drivevision_ads');
             if (savedAds) {
                 renderAds(JSON.parse(savedAds));
@@ -634,6 +617,7 @@
             const slot = document.getElementById(slotId);
             slot.innerHTML = code;
             
+            // Execute inner JS script tags if pasted
             const scripts = slot.getElementsByTagName('script');
             for (let script of scripts) {
                 const newScript = document.createElement('script');
@@ -647,4 +631,4 @@
         }
     </script>
 </body>
-                                                                                                </html>
+            </html>
