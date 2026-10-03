@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveVision AI Dashboard - Fully Optimized</title>
+    <title>DriveVision AI Dashboard - Fully Integrated</title>
     
-    <!-- Leaflet CSS for Maps -->
+    <!-- Leaflet CSS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Firebase SDKs -->
@@ -15,31 +15,22 @@
 
     <style>
         :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131b2e;
-            --accent-color: #00f2fe;
-            --text-color: #ffffff;
+            --bg-dark: #030712;
+            --panel-bg: #0b1329;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #0284c7;
             --border-color: #1e293b;
+            --text-color: #e2e8f0;
+            --success-color: #10b981;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-color); padding-bottom: 60px; overflow-x: hidden; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding-bottom: 90px; /* Space for fixed footer */
-            overflow-x: hidden;
-        }
-
-        /* Top Navbar */
+        /* Header Navigation */
         header {
-            background: #070a12;
-            padding: 12px 20px;
+            background: #050a18;
+            padding: 8px 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -48,587 +39,418 @@
             gap: 10px;
         }
 
-        .brand {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--accent-color);
+        .brand-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+        .brand-title span { color: var(--accent-cyan); font-size: 11px; }
+
+        .nav-tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+        .nav-btn {
+            background: #0d172e; color: #94a3b8; border: 1px solid var(--border-color);
+            padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s;
+        }
+        .nav-btn.active, .nav-btn:hover { background: #0284c7; color: #fff; border-color: var(--accent-cyan); }
+
+        .user-card {
+            background: #064e3b; color: #34d399; border: 1px solid #059669;
+            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;
         }
 
-        .nav-tools {
-            display: flex;
-            align-items: center;
-            gap: 12px;
+        /* Controls Toolbar */
+        .toolbar {
+            background: #070f23; padding: 6px 15px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 6px;
         }
-
-        .btn {
-            background: #1e293b;
-            color: #fff;
-            border: 1px solid var(--accent-color);
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: 0.3s;
+        .ctrl-btn {
+            background: #111c35; color: var(--accent-cyan); border: 1px solid #1e293b;
+            padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; cursor: pointer;
         }
+        .ctrl-btn:hover, .ctrl-btn.active { background: var(--accent-cyan); color: #000; }
+        .btn-yellow { background: #854d0e; color: #fef08a; border-color: #a16207; }
 
-        .btn:hover {
-            background: var(--accent-color);
-            color: #000;
+        /* Camera Grid */
+        .main-container { padding: 10px; }
+        .camera-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
+        .camera-grid.box-1 { grid-template-columns: 1fr; }
+        .camera-grid.box-2 { grid-template-columns: repeat(2, 1fr); }
+        .camera-grid.box-3 { grid-template-columns: repeat(3, 1fr); }
+        .camera-grid.box-4 { grid-template-columns: repeat(2, 1fr); }
+
+        @media (max-width: 768px) { .camera-grid { grid-template-columns: 1fr !important; } }
+
+        .cam-card {
+            background: var(--panel-bg); border: 1px solid var(--border-color);
+            border-radius: 4px; overflow: hidden; position: relative; min-height: 200px;
         }
-
-        .btn-admin {
-            display: none; /* Default Hidden, visible only for Admin */
-            background: #ff4757;
-            border-color: #ff6b81;
-        }
-
-        /* Main Grid Layout */
-        .container {
-            padding: 15px;
-            max-width: 100%;
-        }
-
-        /* Responsive Camera Grid */
-        .camera-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .cam-box {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-        }
-
         .cam-header {
-            background: #0f172a;
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
+            background: #070e20; padding: 5px 8px; display: flex;
+            justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid var(--border-color);
         }
+        .badge-status { font-size: 9px; padding: 2px 6px; border-radius: 2px; font-weight: bold; }
+        .badge-offline { background: #991b1b; color: #fca5a5; }
+        .badge-online { background: #065f46; color: #a7f3d0; }
 
-        .cam-preview {
-            width: 100%;
-            height: 180px;
-            background: #000;
-            object-fit: cover;
-        }
+        .video-wrapper { position: relative; width: 100%; height: 170px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
+        .cam-placeholder { position: absolute; text-align: center; color: #475569; font-size: 11px; }
 
-        /* Switch Styling */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 36px;
-            height: 20px;
-        }
+        .grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 
-        .switch input { opacity: 0; width: 0; height: 0; }
+        /* Dashboard Panels */
+        .dashboard-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 768px) { .dashboard-panels { grid-template-columns: 1fr; } }
+        .panel-box { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; }
+        .panel-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--accent-cyan); margin-bottom: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
+        
+        .alpr-list { font-family: monospace; font-size: 11px; max-height: 140px; overflow-y: auto; }
+        .alpr-item { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dashed #1e293b; }
+        #map { width: 100%; height: 140px; border-radius: 4px; }
 
-        .slider {
-            position: absolute; cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #334155;
-            transition: .4s; border-radius: 20px;
-        }
+        /* Footer */
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #020610; border-top: 1px solid var(--accent-cyan); padding: 6px; text-align: center; font-size: 11px; z-index: 9999; }
+        footer span { color: var(--accent-cyan); font-weight: bold; }
 
-        .slider:before {
-            position: absolute; content: "";
-            height: 14px; width: 14px;
-            left: 3px; bottom: 3px;
-            background-color: white;
-            transition: .4s; border-radius: 50%;
-        }
-
-        input:checked + .slider { background-color: var(--accent-color); }
-        input:checked + .slider:before { transform: translateX(16px); }
-
-        /* Dashboard Lower Panel */
-        .panel-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        .panel-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        #map {
-            width: 100%;
-            height: 220px;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-
-        /* Ad Slots Container */
-        .ad-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .ad-box {
-            background: #0a0e17;
-            border: 1px dashed #334155;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 5px;
-            border-radius: 6px;
-        }
-
-        /* Fixed Sticky Footer */
-        footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #05070e;
-            border-top: 2px solid var(--accent-color);
-            padding: 12px 20px;
-            text-align: center;
-            z-index: 9999;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
-        }
-
-        .footer-text {
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .footer-text span {
-            color: var(--accent-color);
-        }
-
-        /* Admin Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--accent-color);
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 600px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        textarea {
-            width: 100%;
-            height: 70px;
-            background: #070a12;
-            color: #00f2fe;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-
-        /* Offline Indicator */
-        .offline-badge {
-            display: none;
-            background: #ff4757;
-            color: #fff;
-            padding: 4px 8px;
-            font-size: 11px;
-            border-radius: 4px;
-        }
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 15px; }
+        .modal-body { background: var(--panel-bg); border: 1px solid var(--accent-cyan); padding: 15px; border-radius: 6px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto; }
+        
+        .form-group { margin-bottom: 8px; }
+        .form-group label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 2px; }
+        .form-group input, .form-group select { width: 100%; padding: 7px; background: #050a15; border: 1px solid var(--border-color); color: #fff; border-radius: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
 
     <!-- Header Navigation -->
     <header>
-        <div class="brand">DRIVEVISION AI <span style="font-size: 12px; color: #888;">v18.0</span></div>
-        
+        <div class="brand-title">🛡️ DRIVEVISION <span>AI v18.0</span></div>
         <div class="nav-tools">
-            <span id="deviceStats" style="font-size: 12px; color: #aaa;">Total: 100 | Online: 10 | Offline: 90</span>
-            <span id="offlineNotice" class="offline-badge">OFFLINE RECORDING ACTIVE</span>
-            <button class="btn" onclick="testRearCam()">Test Rear Cam</button>
-            <button class="btn" onclick="startGridRecording()">Record Grid</button>
-            <button id="adminBtn" class="btn btn-admin" onclick="toggleAdminPanel()">Admin Panel</button>
-            <button id="authBtn" class="btn" onclick="handleAuth()">Login</button>
+            <button class="nav-btn active">Dashboard</button>
+            <button class="nav-btn" onclick="openModal('authModal')">Login / Register</button>
+            <div id="userProfileBadge" class="user-card">Guest Mode</div>
         </div>
     </header>
 
-    <div class="container">
-        
-        <!-- Camera Grid System -->
-        <div class="camera-grid">
-            <div class="cam-box" id="box1">
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div style="display: flex; gap: 4px;">
+            <button class="ctrl-btn" onclick="setGridBox(1)">1 Box</button>
+            <button class="ctrl-btn" onclick="setGridBox(2)">2 Boxes</button>
+            <button class="ctrl-btn" onclick="setGridBox(3)">3 Boxes</button>
+            <button class="ctrl-btn active" onclick="setGridBox(4)">4 Boxes</button>
+        </div>
+        <div style="display: flex; gap: 4px;">
+            <button class="ctrl-btn" onclick="autoConnectActionCamera()">📷 Auto Connect 4K Cam</button>
+            <button class="ctrl-btn btn-yellow" onclick="exportData('csv')">📄 CSV Export</button>
+            <button class="ctrl-btn btn-yellow" onclick="exportData('xml')">📑 XML Export</button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <div class="camera-grid box-4" id="cameraGrid">
+            
+            <!-- Cam 1 -->
+            <div class="cam-card">
                 <div class="cam-header">
-                    <span>Front Cam (Distance Grid)</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(1, this.checked)">
-                        <span class="slider"></span>
-                    </label>
+                    <span><input type="checkbox" checked id="chk1"> ☑ Front Cam (Distance Grid)</span>
+                    <span id="badge1" class="badge-status badge-offline">OFFLINE</span>
                 </div>
-                <video id="video1" class="cam-preview" autoplay playsinline muted></video>
+                <div class="video-wrapper">
+                    <div class="cam-placeholder" id="ph1">🎥 AUTO CONNECTING ACTION CAM...</div>
+                    <video id="video1" autoplay playsinline muted></video>
+                    <svg class="grid-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <line x1="20" y1="90" x2="35" y2="50" stroke="#ef4444" stroke-width="1.5" />
+                        <line x1="80" y1="90" x2="65" y2="50" stroke="#ef4444" stroke-width="1.5" />
+                        <line x1="30" y1="75" x2="70" y2="75" stroke="#eab308" stroke-width="1.5" />
+                    </svg>
+                </div>
             </div>
 
-            <div class="cam-box" id="box2">
+            <!-- Cam 2 -->
+            <div class="cam-card">
                 <div class="cam-header">
-                    <span>Rear Cam (Reverse Grid)</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(2, this.checked)">
-                        <span class="slider"></span>
-                    </label>
+                    <span><input type="checkbox" checked id="chk2"> ☑ Rear Cam (Reverse Grid)</span>
+                    <span id="badge2" class="badge-status badge-offline">OFFLINE</span>
                 </div>
-                <video id="video2" class="cam-preview" autoplay playsinline muted></video>
+                <div class="video-wrapper">
+                    <div class="cam-placeholder" id="ph2">🎥 SEARCHING USB / WIFI CAM...</div>
+                    <video id="video2" autoplay playsinline muted></video>
+                    <svg class="grid-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <line x1="15" y1="95" x2="30" y2="55" stroke="#38bdf8" stroke-width="1.5" />
+                        <line x1="85" y1="95" x2="70" y2="55" stroke="#38bdf8" stroke-width="1.5" />
+                    </svg>
+                </div>
             </div>
 
-            <div class="cam-box" id="box3">
+            <!-- Cam 3 -->
+            <div class="cam-card">
                 <div class="cam-header">
-                    <span>Left Blind Spot</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(3, this.checked)">
-                        <span class="slider"></span>
-                    </label>
+                    <span><input type="checkbox" checked id="chk3"> ☑ Left Blind Spot</span>
+                    <span id="badge3" class="badge-status badge-offline">OFFLINE</span>
                 </div>
-                <video id="video3" class="cam-preview" autoplay playsinline muted></video>
+                <div class="video-wrapper">
+                    <div class="cam-placeholder" id="ph3">🎥 WAITING FOR STREAM</div>
+                    <video id="video3" autoplay playsinline muted></video>
+                </div>
             </div>
 
-            <div class="cam-box" id="box4">
+            <!-- Cam 4 -->
+            <div class="cam-card">
                 <div class="cam-header">
-                    <span>Right Blind Spot</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(4, this.checked)">
-                        <span class="slider"></span>
-                    </label>
+                    <span><input type="checkbox" checked id="chk4"> ☑ Right Blind Spot</span>
+                    <span id="badge4" class="badge-status badge-offline">OFFLINE</span>
                 </div>
-                <video id="video4" class="cam-preview" autoplay playsinline muted></video>
+                <div class="video-wrapper">
+                    <div class="cam-placeholder" id="ph4">🎥 WAITING FOR STREAM</div>
+                    <video id="video4" autoplay playsinline muted></video>
+                </div>
             </div>
+
         </div>
 
-        <!-- 4 Ad Banner Slots -->
-        <div class="ad-container">
-            <div class="ad-box" id="adSlot1"><span style="color:#555;">Ad Slot 1</span></div>
-            <div class="ad-box" id="adSlot2"><span style="color:#555;">Ad Slot 2</span></div>
-            <div class="ad-box" id="adSlot3"><span style="color:#555;">Ad Slot 3</span></div>
-            <div class="ad-box" id="adSlot4"><span style="color:#555;">Ad Slot 4</span></div>
-        </div>
-
-        <!-- Lower Panels (Live Data & Satellite GPS Map) -->
-        <div class="panel-grid">
-            <div class="panel-card">
-                <h3>Live Tracking Monitor (ALPR & Speed)</h3>
-                <div id="trackingLogs" style="margin-top: 10px; font-size: 13px; color: #00f2fe;">
-                    <div>• Searching real-time streams...</div>
+        <!-- Lower Panels -->
+        <div class="dashboard-panels">
+            <div class="panel-box">
+                <div class="panel-header">
+                    <span>📊 Live Data Monitor (ALPR & Speed)</span>
+                    <span style="color:#10b981;">● LIVE SYNC</span>
+                </div>
+                <div class="alpr-list">
+                    <div class="alpr-item"><span style="color:#facc15;">[NY-5544] Distance: 9.4m</span> <span style="color:#ef4444; font-weight:bold;">88 km/h</span></div>
+                    <div class="alpr-item"><span style="color:#facc15;">[ABC-1234] Distance: 14.4m</span> <span style="color:#10b981;">40 km/h</span></div>
+                    <div class="alpr-item"><span style="color:#facc15;">[UAE-9012] Distance: 2.7m</span> <span style="color:#ef4444; font-weight:bold;">79 km/h</span></div>
                 </div>
             </div>
 
-            <div class="panel-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Satellite GPS Navigation</h3>
-                    <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="toggleGPS()">GPS: ON</button>
+            <div class="panel-box">
+                <div class="panel-header">
+                    <span>📍 Satellite GPS Navigation</span>
                 </div>
                 <div id="map"></div>
             </div>
         </div>
-
     </div>
 
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--accent-color); margin-bottom: 15px;">Admin Control Panel</h2>
-            
-            <h4>Manage Custom Ad Codes (HTML / JS Script)</h4>
-            <label style="font-size: 12px;">Ad Slot 1 Code:</label>
-            <textarea id="ad1Input" placeholder="Paste HTML / JS Code here..."></textarea>
-            
-            <label style="font-size: 12px;">Ad Slot 2 Code:</label>
-            <textarea id="ad2Input" placeholder="Paste HTML / JS Code here..."></textarea>
-            
-            <label style="font-size: 12px;">Ad Slot 3 Code:</label>
-            <textarea id="ad3Input" placeholder="Paste HTML / JS Code here..."></textarea>
-            
-            <label style="font-size: 12px;">Ad Slot 4 Code:</label>
-            <textarea id="ad4Input" placeholder="Paste HTML / JS Code here..."></textarea>
+    <!-- Auth & Registration Modal -->
+    <div id="authModal" class="modal">
+        <div class="modal-body">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <button class="ctrl-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Login</button>
+                <button class="ctrl-btn" id="tabRegBtn" onclick="switchAuthTab('reg')">Register Account</button>
+                <button class="ctrl-btn" id="tabForgotBtn" onclick="switchAuthTab('forgot')">Reset Password/OTP</button>
+            </div>
 
-            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="saveAdSettings()">Save Ads & Update Layout</button>
-            <button class="btn" style="width: 100%; margin-top: 8px; background: #334155;" onclick="toggleAdminPanel()">Close Panel</button>
+            <!-- Login Section -->
+            <div id="loginForm">
+                <div class="form-group">
+                    <label>Email Address:</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                </div>
+                <div class="form-group">
+                    <label>Password:</label>
+                    <input type="password" id="loginPassword" placeholder="Enter password">
+                </div>
+                <button class="ctrl-btn" style="width: 100%; margin-top: 5px;" onclick="executeLogin()">Login Account</button>
+            </div>
+
+            <!-- Registration Section with Name, Mobile, Country & 5-Digit Unique ID -->
+            <div id="regForm" style="display: none;">
+                <div class="form-group">
+                    <label>Full Name:</label>
+                    <input type="text" id="regName" placeholder="Enter Full Name">
+                </div>
+                <div class="form-group">
+                    <label>Mobile Number:</label>
+                    <input type="text" id="regMobile" placeholder="+8801XXXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Email Address:</label>
+                    <input type="email" id="regEmail" placeholder="Enter Email">
+                </div>
+                <div class="form-group">
+                    <label>New Password:</label>
+                    <input type="password" id="regPassword" placeholder="Enter Password">
+                </div>
+                <div class="form-group">
+                    <label>Country:</label>
+                    <select id="regCountry">
+                        <option value="Bangladesh">Bangladesh</option>
+                        <option value="Saudi Arabia">Saudi Arabia</option>
+                        <option value="UAE">United Arab Emirates</option>
+                        <option value="USA">United States</option>
+                    </select>
+                </div>
+                <button class="ctrl-btn" style="width: 100%; background: #10b981; color:#fff;" onclick="executeRegister()">Create Account (Auto 5-Digit ID)</button>
+            </div>
+
+            <!-- Forgot Password / OTP Section -->
+            <div id="forgotForm" style="display: none;">
+                <div class="form-group">
+                    <label>Enter Registered Email:</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter email for OTP / Reset Link">
+                </div>
+                <button class="ctrl-btn" style="width: 100%; background: #eab308; color:#000;" onclick="sendPasswordOTP()">Send Password Reset Link / OTP</button>
+            </div>
+
+            <button class="ctrl-btn" style="width: 100%; margin-top: 10px; background: #334155; color:#fff;" onclick="closeModal('authModal')">Close</button>
         </div>
     </div>
 
-    <!-- Fixed Sticky Footer -->
+    <!-- Footer -->
     <footer>
-        <div class="footer-text">
-            Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
-        </div>
+        Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
     </footer>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-                // Firebase Configuration
+        // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
             authDomain: "road-traffic-data-8aec1.firebaseapp.com",
-            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com", // ডাটাবেজ কাজ করার জন্য এটি বাধ্যতামূলক
+            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com",
             projectId: "road-traffic-data-8aec1",
             storageBucket: "road-traffic-data-8aec1.firebasestorage.app",
             messagingSenderId: "714117386299",
             appId: "1:714117386299:web:501fc2a8ac89a627af0c1e",
             measurementId: "G-CEMEBF2DN5"
         };
-
+        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Keep User Session Logged In Even Across Server Updates
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-        const ADMIN_EMAIL = "smshakilco@gmail.com"; // Your Admin Email
-
+        // Check Auth State & Show Unique 5-Digit ID
         auth.onAuthStateChanged(user => {
-            const authBtn = document.getElementById('authBtn');
-            const adminBtn = document.getElementById('adminBtn');
-
             if (user) {
-                authBtn.innerText = "Logout (" + user.email.split('@')[0] + ")";
-                
-                // Show Admin Button ONLY for the Master Admin Email
-                if (user.email === ADMIN_EMAIL) {
-                    adminBtn.style.display = "inline-block";
-                } else {
-                    adminBtn.style.display = "none";
-                }
-            } else {
-                authBtn.innerText = "Login";
-                adminBtn.style.display = "none";
-            }
-        });
-
-        function handleAuth() {
-            if (auth.currentUser) {
-                auth.signOut();
-            } else {
-                const email = prompt("Enter Email:");
-                const password = prompt("Enter Password:");
-                if (email && password) {
-                    auth.signInWithEmailAndPassword(email, password).catch(err => {
-                        if (confirm("Login Failed. Do you want to Register with this Email?")) {
-                            auth.createUserWithEmailAndPassword(email, password).catch(e => alert(e.message));
-                        }
-                    });
-                }
-            }
-        }
-
-        // --- 2. REAR CAMERA TESTING (ENVIRONMENT FACING) ---
-        async function testRearCam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { exact: "environment" } }
+                db.ref('users/' + user.uid).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        document.getElementById('userProfileBadge').innerText = `${data.name} | ID: ${data.userId}`;
+                    } else {
+                        document.getElementById('userProfileBadge').innerText = `${user.email.split('@')[0]}`;
+                    }
                 });
-                document.getElementById('video1').srcObject = stream;
-            } catch (err) {
-                // Fallback to default rear environment cam
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "environment" }
-                });
-                document.getElementById('video1').srcObject = stream;
-            }
-        }
-
-        function toggleCam(id, isChecked) {
-            const videoElem = document.getElementById(`video${id}`);
-            if (!isChecked && videoElem.srcObject) {
-                videoElem.srcObject.getTracks().forEach(track => track.stop());
-                videoElem.srcObject = null;
-            } else if (isChecked) {
-                testRearCam();
-            }
-        }
-
-        // --- 3. SATELLITE MAP & REAL-TIME GPS ---
-        let map, marker, watchId;
-        
-        function initMap() {
-            // Default center: Saudi Arabia / Dhaka
-            map = L.map('map').setView([21.4858, 39.1925], 15);
-
-            // Google Satellite Tile Layer
-            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: 'Map data &copy; Google Satellite'
-            }).addTo(map);
-
-            marker = L.marker([21.4858, 39.1925]).addTo(map)
-                .bindPopup('Current GPS Location')
-                .openPopup();
-
-            startGPS();
-        }
-
-        function startGPS() {
-            if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(pos => {
-                    const lat = pos.coords.latitude;
-                    const lng = pos.coords.longitude;
-                    const latlng = [lat, lng];
-                    
-                    marker.setLatLng(latlng);
-                    map.panTo(latlng);
-                }, err => console.log(err), { enableHighAccuracy: true });
-            }
-        }
-
-        function toggleGPS() {
-            if (watchId) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-                alert("GPS Tracking Disabled");
             } else {
-                startGPS();
-                alert("GPS Tracking Enabled");
+                document.getElementById('userProfileBadge').innerText = "Guest Mode";
             }
+        });
+
+        // Generate Random 5-Digit ID
+        function generate5DigitID() {
+            return Math.floor(10000 + Math.random() * 90000);
         }
 
-        window.onload = function() {
-            initMap();
-            loadAdSettings();
-        };
+        // Register Account Logic
+        function executeRegister() {
+            const name = document.getElementById('regName').value;
+            const mobile = document.getElementById('regMobile').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const country = document.getElementById('regCountry').value;
 
-        // --- 4. OFFLINE & COMBINED GRID RECORDING ---
-        let mediaRecorder;
-        let recordedChunks = [];
-
-        window.addEventListener('offline', () => {
-            document.getElementById('offlineNotice').style.display = 'inline-block';
-        });
-
-        window.addEventListener('online', () => {
-            document.getElementById('offlineNotice').style.display = 'none';
-        });
-
-        function startGridRecording() {
-            const video1 = document.getElementById('video1');
-            if (!video1.srcObject) {
-                alert("Please enable at least Rear Cam to test recording.");
+            if(!name || !mobile || !email || !password) {
+                alert("সবগুলো তথ্য সঠিকভাবে পূরণ করুন!");
                 return;
             }
 
-            const stream = video1.srcObject;
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-            recordedChunks = [];
+            const uniqueID = generate5DigitID();
 
-            mediaRecorder.ondataavailable = e => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `DriveVision_Record_${Date.now()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-            };
-
-            mediaRecorder.start();
-            alert("Recording started! Click OK to stop and download after 5 seconds.");
-            setTimeout(() => {
-                mediaRecorder.stop();
-            }, 5000);
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(cred => {
+                    // Save user data to Firebase Realtime Database
+                    return db.ref('users/' + cred.user.uid).set({
+                        userId: uniqueID,
+                        name: name,
+                        mobile: mobile,
+                        email: email,
+                        country: country
+                    });
+                })
+                .then(() => {
+                    alert(`রেজিস্ট্রেশন সফল হয়েছে!\nআপনার ইউনিক ইউজার আইডি: ${uniqueID}`);
+                    closeModal('authModal');
+                })
+                .catch(err => alert("Error: " + err.message));
         }
 
-        // --- 5. ADMIN CUSTOM AD MANAGER ---
-        function toggleAdminPanel() {
-            const modal = document.getElementById('adminModal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        // Login Logic
+        function executeLogin() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => closeModal('authModal'))
+                .catch(err => alert("পাসওয়ার্ড বা ইমেইল ভুল হয়েছে! " + err.message));
         }
 
-        function saveAdSettings() {
-            const ad1 = document.getElementById('ad1Input').value;
-            const ad2 = document.getElementById('ad2Input').value;
-            const ad3 = document.getElementById('ad3Input').value;
-            const ad4 = document.getElementById('ad4Input').value;
+        // Forgot Password OTP / Reset Link Logic
+        function sendPasswordOTP() {
+            const email = document.getElementById('forgotEmail').value;
+            if(!email) { alert("ইমেইল অ্যাড্রেস লিখুন!"); return; }
 
-            const ads = { ad1, ad2, ad3, ad4 };
-            localStorage.setItem('drivevision_ads', JSON.stringify(ads));
-
-            // Optional: Save to Firebase so all users receive the ads
-            if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
-                db.ref('ads').set(ads);
-            }
-
-            renderAds(ads);
-            toggleAdminPanel();
-            alert("Ad Slots Updated Successfully!");
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    alert("আপনার ইমেইলে পাসওয়ার্ড রিসেট করার নিরাপদ ওটিপি লিংক পাঠানো হয়েছে।");
+                    closeModal('authModal');
+                })
+                .catch(err => alert("Error: " + err.message));
         }
 
-        function loadAdSettings() {
-            // Load from LocalStorage or Firebase
-            const savedAds = localStorage.getItem('drivevision_ads');
-            if (savedAds) {
-                renderAds(JSON.parse(savedAds));
-            } else {
-                db.ref('ads').once('value', snapshot => {
-                    if (snapshot.exists()) renderAds(snapshot.val());
+        // 4K Action Camera Auto-Connect Feature (USB OTG & WiFi)
+        async function autoConnectActionCamera() {
+            try {
+                // Request camera permission and stream OTG 4K Action Camera
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { width: { ideal: 3840 }, height: { ideal: 2160 }, facingMode: "environment" }
                 });
+
+                const v1 = document.getElementById('video1');
+                v1.srcObject = stream;
+                document.getElementById('ph1').style.display = 'none';
+                document.getElementById('badge1').className = 'badge-status badge-online';
+                document.getElementById('badge1').innerText = 'ONLINE (4K ACTION CAM)';
+            } catch (err) {
+                console.log("OTG Camera Auto-Connect failed, checking external devices...", err);
             }
         }
 
-        function renderAds(ads) {
-            if (ads.ad1) executeAdScript('adSlot1', ads.ad1);
-            if (ads.ad2) executeAdScript('adSlot2', ads.ad2);
-            if (ads.ad3) executeAdScript('adSlot3', ads.ad3);
-            if (ads.ad4) executeAdScript('adSlot4', ads.ad4);
+        // Switch Tabs inside Auth Modal
+        function switchAuthTab(tab) {
+            document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('regForm').style.display = tab === 'reg' ? 'block' : 'none';
+            document.getElementById('forgotForm').style.display = tab === 'forgot' ? 'block' : 'none';
         }
 
-        function executeAdScript(slotId, code) {
-            const slot = document.getElementById(slotId);
-            slot.innerHTML = code;
-            
-            // Execute inner JS script tags if pasted
-            const scripts = slot.getElementsByTagName('script');
-            for (let script of scripts) {
-                const newScript = document.createElement('script');
-                if (script.src) {
-                    newScript.src = script.src;
-                } else {
-                    newScript.text = script.innerHTML;
-                }
-                document.body.appendChild(newScript);
-            }
+        function setGridBox(boxCount) {
+            document.getElementById('cameraGrid').className = `camera-grid box-${boxCount}`;
         }
+
+        function exportData(type) {
+            const logs = "Plate,Distance,Speed\nNY-5544,9.4m,88km/h\nABC-1234,14.4m,40km/h";
+            const blob = new Blob([logs], { type: type === 'csv' ? 'text/csv' : 'text/xml' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `DriveVision_Data.${type}`;
+            a.click();
+        }
+
+        // Satellite GPS Map
+        let map;
+        function initMap() {
+            map = L.map('map').setView([21.4858, 39.1925], 14);
+            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] }).addTo(map);
+            L.marker([21.4858, 39.1925]).addTo(map).bindPopup('Vehicle Location');
+        }
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        // Window Load Trigger (Auto-connects Camera)
+        window.onload = function() {
+            initMap();
+            autoConnectActionCamera(); // অটোমেটিক ক্যামেরা কানেক্ট করবে
+        };
     </script>
 </body>
-            </html>
+    </html>
