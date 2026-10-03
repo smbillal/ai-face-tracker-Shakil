@@ -77,7 +77,7 @@
         }
 
         .btn-admin {
-            display: none;
+            display: none; /* Hide by default, show ONLY for smshakilco@gmail.com */
             background: #ff4757;
             border-color: #ff6b81;
         }
@@ -121,6 +121,7 @@
             object-fit: cover;
         }
 
+        /* Toggle Switches */
         .switch {
             position: relative;
             display: inline-block;
@@ -260,6 +261,7 @@
 
     <header>
         <div class="brand">DRIVEVISION AI <span style="font-size: 12px; color: #888;">v18.0</span></div>
+        
         <div class="nav-tools">
             <span id="deviceStats" style="font-size: 12px; color: #aaa;">Total: 100 | Online: 10 | Offline: 90</span>
             <span id="offlineNotice" class="offline-badge">OFFLINE RECORDING ACTIVE</span>
@@ -271,6 +273,8 @@
     </header>
 
     <div class="container">
+        
+        <!-- Cameras Grid -->
         <div class="camera-grid">
             <div class="cam-box" id="box1">
                 <div class="cam-header">
@@ -317,6 +321,7 @@
             </div>
         </div>
 
+        <!-- 4 Ad Banner Slots -->
         <div class="ad-container">
             <div class="ad-box" id="adSlot1"><span style="color:#555;">Ad Slot 1</span></div>
             <div class="ad-box" id="adSlot2"><span style="color:#555;">Ad Slot 2</span></div>
@@ -324,6 +329,7 @@
             <div class="ad-box" id="adSlot4"><span style="color:#555;">Ad Slot 4</span></div>
         </div>
 
+        <!-- Lower Panels -->
         <div class="panel-grid">
             <div class="panel-card">
                 <h3>Live Tracking Monitor (ALPR & Speed)</h3>
@@ -340,12 +346,14 @@
                 <div id="map"></div>
             </div>
         </div>
+
     </div>
 
     <!-- Admin Panel Modal -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
             <h2 style="color: var(--accent-color); margin-bottom: 15px;">Admin Control Panel</h2>
+            
             <h4>Custom Ad Management (Paste HTML / JS)</h4>
             <label style="font-size: 12px;">Ad Slot 1 Code:</label>
             <textarea id="ad1Input" placeholder="Paste HTML / JS Code here..."></textarea>
@@ -364,7 +372,7 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
+    <!-- Auth Modal (Login / Register / Forgot Password) -->
     <div id="authModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--accent-color); margin-bottom: 15px;" id="authTitle">User Authentication</h3>
@@ -378,15 +386,18 @@
         </div>
     </div>
 
+    <!-- Fixed Footer -->
     <footer>
         <div class="footer-text">
             Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
         </div>
     </footer>
 
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
+        // --- 1. YOUR LIVE FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
             authDomain: "road-traffic-data-8aec1.firebaseapp.com",
@@ -402,7 +413,9 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
+        // Ensure session remains active across server updates
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
         const ADMIN_EMAIL = "smshakilco@gmail.com";
 
         auth.onAuthStateChanged(user => {
@@ -413,6 +426,7 @@
                 authBtn.innerText = "Logout (" + user.email.split('@')[0] + ")";
                 authBtn.onclick = () => auth.signOut();
                 
+                // Show Admin Panel ONLY for smshakilco@gmail.com
                 if (user.email === ADMIN_EMAIL) {
                     adminBtn.style.display = "inline-block";
                 } else {
@@ -425,6 +439,7 @@
             }
         });
 
+        // --- AUTHENTICATION FUNCTIONS ---
         function openAuthModal() {
             document.getElementById('authModal').style.display = 'flex';
         }
@@ -463,6 +478,7 @@
                 .catch(err => alert("Error: " + err.message));
         }
 
+        // --- 2. CAMERA CONTROLS ---
         async function testRearCam() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
@@ -485,6 +501,7 @@
             }
         }
 
+        // --- 3. SATELLITE GPS MAP ---
         let map, marker, watchId;
         
         function initMap() {
@@ -497,6 +514,7 @@
             }).addTo(map);
 
             marker = L.marker([21.4858, 39.1925]).addTo(map).bindPopup('Vehicle Location');
+
             startGPS();
         }
 
@@ -526,6 +544,7 @@
             loadAdSettings();
         };
 
+        // --- 4. OFFLINE RECORDING SYSTEM ---
         let mediaRecorder;
         let recordedChunks = [];
 
@@ -569,6 +588,7 @@
             setTimeout(() => mediaRecorder.stop(), 5000);
         }
 
+        // --- 5. AD MANAGER FOR ADMIN ---
         function toggleAdminPanel() {
             const modal = document.getElementById('adminModal');
             modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
