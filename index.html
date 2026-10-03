@@ -3,522 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveVision AI Dashboard - Full Control</title>
-    
-    <!-- Leaflet CSS for Satellite Map -->
+    <title>DriveVision AI Dashboard</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
     <style>
-        :root {
-            --bg-dark: #030712;
-            --panel-bg: #0b1329;
-            --accent-cyan: #00f2fe;
-            --border-color: #1e293b;
-            --text-color: #e2e8f0;
-        }
+        :root { --bg-dark: #030712; --panel-bg: #0b1329; --accent-cyan: #00f2fe; --border-color: #1e293b; --text-color: #e2e8f0; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-color); padding-bottom: 60px; }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-color); padding-bottom: 60px; overflow-x: hidden; }
-
-        /* Navigation Header */
-        header {
-            background: #050a18; padding: 8px 15px; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap; gap: 10px;
-        }
-
-        .brand-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 1px; }
+        header { background: #050a18; padding: 10px 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); }
+        .brand-title { font-size: 16px; font-weight: bold; color: #fff; }
         .brand-title span { color: var(--accent-cyan); font-size: 11px; }
 
-        .nav-tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
-        .nav-btn {
-            background: #0d172e; color: #94a3b8; border: 1px solid var(--border-color);
-            padding: 5px 10px; border-radius: 4px; font-size: 11px; cursor: pointer; transition: 0.2s;
-        }
-        .nav-btn.active, .nav-btn:hover { background: #0284c7; color: #fff; border-color: var(--accent-cyan); }
+        .user-card { background: #064e3b; color: #34d399; border: 1px solid #059669; padding: 5px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        .toolbar { background: #070f23; padding: 8px 15px; display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px solid var(--border-color); }
+        .ctrl-btn { background: #111c35; color: var(--accent-cyan); border: 1px solid #1e293b; padding: 5px 10px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer; }
 
-        .user-card {
-            background: #064e3b; color: #34d399; border: 1px solid #059669;
-            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;
-        }
-
-        /* Toolbar Controls */
-        .toolbar {
-            background: #070f23; padding: 6px 15px; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap; gap: 6px;
-        }
-        .ctrl-btn {
-            background: #111c35; color: var(--accent-cyan); border: 1px solid #1e293b;
-            padding: 4px 8px; border-radius: 3px; font-size: 11px; font-weight: 600; cursor: pointer;
-        }
-        .ctrl-btn:hover, .ctrl-btn.active { background: var(--accent-cyan); color: #000; }
-        .btn-yellow { background: #854d0e; color: #fef08a; border-color: #a16207; }
-
-        /* Camera Grid */
         .main-container { padding: 10px; }
         .camera-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 10px; }
-        .camera-grid.box-1 { grid-template-columns: 1fr; }
-        .camera-grid.box-2 { grid-template-columns: repeat(2, 1fr); }
-        .camera-grid.box-3 { grid-template-columns: repeat(3, 1fr); }
-        .camera-grid.box-4 { grid-template-columns: repeat(2, 1fr); }
+        @media (max-width: 768px) { .camera-grid { grid-template-columns: 1fr; } }
 
-        @media (max-width: 768px) { .camera-grid { grid-template-columns: 1fr !important; } }
-
-        .cam-card {
-            background: var(--panel-bg); border: 1px solid var(--border-color);
-            border-radius: 4px; overflow: hidden; position: relative; min-height: 220px;
-            display: flex; flex-direction: column; justify-content: space-between;
-        }
-        .cam-header {
-            background: #070e20; padding: 5px 8px; display: flex;
-            justify-content: space-between; align-items: center; font-size: 11px; border-bottom: 1px solid var(--border-color);
-        }
+        .cam-card { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; overflow: hidden; min-height: 200px; display: flex; flex-direction: column; }
+        .cam-header { background: #070e20; padding: 6px 10px; display: flex; justify-content: space-between; font-size: 11px; border-bottom: 1px solid var(--border-color); }
         .badge-status { font-size: 9px; padding: 2px 6px; border-radius: 2px; font-weight: bold; }
         .badge-offline { background: #991b1b; color: #fca5a5; }
         .badge-online { background: #065f46; color: #a7f3d0; }
 
         .video-wrapper { position: relative; width: 100%; height: 160px; background: #000; display: flex; align-items: center; justify-content: center; }
-        .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
-        .cam-placeholder { position: absolute; text-align: center; color: #475569; font-size: 11px; padding: 5px; }
+        .video-wrapper video, .video-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .cam-placeholder { position: absolute; text-align: center; color: #64748b; font-size: 11px; }
 
-        .grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
+        .cam-control-bar { background: #060c1c; padding: 6px; display: flex; border-top: 1px solid var(--border-color); }
+        .cam-select { background: #0f172a; color: var(--accent-cyan); border: 1px solid #1e293b; font-size: 11px; padding: 4px; border-radius: 3px; width: 100%; }
 
-        /* Individual Box Connection Bar */
-        .cam-control-bar {
-            background: #060c1c; padding: 4px 6px; display: flex; justify-content: space-between;
-            align-items: center; border-top: 1px solid var(--border-color); gap: 4px;
-        }
-        .cam-select {
-            background: #0f172a; color: var(--accent-cyan); border: 1px solid #1e293b;
-            font-size: 10px; padding: 3px 5px; border-radius: 3px; width: 100%;
-        }
+        #map { width: 100%; height: 120px; border-radius: 4px; }
+        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #020610; border-top: 1px solid var(--accent-cyan); padding: 6px; text-align: center; font-size: 11px; }
 
-        /* Dashboard Lower Panels */
-        .dashboard-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (max-width: 768px) { .dashboard-panels { grid-template-columns: 1fr; } }
-        .panel-box { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; }
-        .panel-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--accent-cyan); margin-bottom: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
-        
-        .alpr-list { font-family: monospace; font-size: 11px; max-height: 130px; overflow-y: auto; }
-        .alpr-item { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dashed #1e293b; }
-        #map { width: 100%; height: 130px; border-radius: 4px; }
-
-        /* Footer */
-        footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #020610; border-top: 1px solid var(--accent-cyan); padding: 6px; text-align: center; font-size: 11px; z-index: 9999; }
-        footer span { color: var(--accent-cyan); font-weight: bold; }
-
-        /* Modals */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 15px; }
-        .modal-body { background: var(--panel-bg); border: 1px solid var(--accent-cyan); padding: 15px; border-radius: 6px; max-width: 420px; width: 100%; max-height: 90vh; overflow-y: auto; }
-        
-        .form-group { margin-bottom: 8px; }
-        .form-group label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 2px; }
-        .form-group input, .form-group select { width: 100%; padding: 7px; background: #050a15; border: 1px solid var(--border-color); color: #fff; border-radius: 4px; font-size: 12px; }
+        .modal-body { background: var(--panel-bg); border: 1px solid var(--accent-cyan); padding: 15px; border-radius: 6px; max-width: 400px; width: 100%; }
+        .form-group { margin-bottom: 10px; }
+        .form-group label { font-size: 11px; color: #94a3b8; display: block; margin-bottom: 3px; }
+        .form-group input { width: 100%; padding: 8px; background: #050a15; border: 1px solid var(--border-color); color: #fff; border-radius: 4px; font-size: 12px; }
     </style>
 </head>
 <body>
 
-    <!-- Top Navigation Header -->
     <header>
         <div class="brand-title">🛡️ DRIVEVISION <span>AI v18.0</span></div>
-        <div class="nav-tools">
-            <button class="nav-btn active">Dashboard</button>
-            <button class="nav-btn" onclick="openModal('authModal')">Login / Register</button>
-            <div id="userProfileBadge" class="user-card" onclick="openModal('authModal')">Guest Mode (Click to Login)</div>
-        </div>
+        <div id="userProfileBadge" class="user-card" onclick="openModal('authModal')">🔑 Guest Mode (Click to Login)</div>
     </header>
 
-    <!-- Toolbar -->
     <div class="toolbar">
-        <div style="display: flex; gap: 4px;">
-            <button class="ctrl-btn" onclick="setGridBox(1)">1 Box</button>
-            <button class="ctrl-btn" onclick="setGridBox(2)">2 Boxes</button>
-            <button class="ctrl-btn" onclick="setGridBox(3)">3 Boxes</button>
-            <button class="ctrl-btn active" onclick="setGridBox(4)">4 Boxes</button>
-        </div>
-        <div style="display: flex; gap: 4px;">
-            <button class="ctrl-btn" onclick="openWiFiCamModal()">📡 Connect 4K ActionCam</button>
-            <button class="ctrl-btn btn-yellow" onclick="exportData('csv')">📄 CSV Export</button>
-            <button class="ctrl-btn btn-yellow" onclick="exportData('xml')">📑 XML Export</button>
-        </div>
+        <button class="ctrl-btn" onclick="openModal('authModal')">👤 Account / Register</button>
+        <button class="ctrl-btn" onclick="openModal('wifiCamModal')">📡 ActionCam WiFi Stream</button>
     </div>
 
-    <!-- Main Container -->
     <div class="main-container">
-        <div class="camera-grid box-4" id="cameraGrid">
-            
-            <!-- Cam 1 -->
+        <div class="camera-grid">
             <div class="cam-card">
                 <div class="cam-header">
-                    <span><input type="checkbox" checked id="chk1"> ☑ Front Cam (Distance Grid)</span>
+                    <span>Front Cam</span>
                     <span id="badge1" class="badge-status badge-offline">OFFLINE</span>
                 </div>
                 <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph1">🎥 CAMERA DISCONNECTED</div>
-                    <video id="video1" autoplay playsinline muted></video>
-                    <svg class="grid-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <line x1="20" y1="90" x2="35" y2="50" stroke="#ef4444" stroke-width="1.5" />
-                        <line x1="80" y1="90" x2="65" y2="50" stroke="#ef4444" stroke-width="1.5" />
-                        <line x1="30" y1="75" x2="70" y2="75" stroke="#eab308" stroke-width="1.5" />
-                    </svg>
+                    <div class="cam-placeholder" id="ph1">📷 NO CAMERA CONNECTED</div>
+                    <video id="video1" autoplay playsinline muted style="display:none;"></video>
+                    <img id="img1" style="display:none;" />
                 </div>
                 <div class="cam-control-bar">
                     <select class="cam-select" onchange="handleCamSelect(1, this.value)">
-                        <option value="none">-- Select Camera Input --</option>
-                        <option value="otg">🔌 Type-C OTG / USB Camera</option>
-                        <option value="wificam">📡 WiFi Action Camera (IP/RTSP)</option>
+                        <option value="none">-- Select Input --</option>
+                        <option value="otg">🔌 Phone / USB Camera</option>
+                        <option value="wificam">📡 WiFi ActionCam Stream</option>
                     </select>
                 </div>
             </div>
 
-            <!-- Cam 2 -->
             <div class="cam-card">
                 <div class="cam-header">
-                    <span><input type="checkbox" checked id="chk2"> ☑ Rear Cam (Reverse Grid)</span>
+                    <span>Rear Cam</span>
                     <span id="badge2" class="badge-status badge-offline">OFFLINE</span>
                 </div>
                 <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph2">🎥 CAMERA DISCONNECTED</div>
-                    <video id="video2" autoplay playsinline muted></video>
-                    <svg class="grid-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <line x1="15" y1="95" x2="30" y2="55" stroke="#38bdf8" stroke-width="1.5" />
-                        <line x1="85" y1="95" x2="70" y2="55" stroke="#38bdf8" stroke-width="1.5" />
-                    </svg>
+                    <div class="cam-placeholder" id="ph2">📷 NO CAMERA CONNECTED</div>
+                    <video id="video2" autoplay playsinline muted style="display:none;"></video>
+                    <img id="img2" style="display:none;" />
                 </div>
                 <div class="cam-control-bar">
                     <select class="cam-select" onchange="handleCamSelect(2, this.value)">
-                        <option value="none">-- Select Camera Input --</option>
-                        <option value="otg">🔌 USB / Rear Camera</option>
-                        <option value="wificam">📡 WiFi Action Camera (IP/RTSP)</option>
+                        <option value="none">-- Select Input --</option>
+                        <option value="otg">🔌 Phone / USB Camera</option>
+                        <option value="wificam">📡 WiFi ActionCam Stream</option>
                     </select>
                 </div>
             </div>
-
-            <!-- Cam 3 -->
-            <div class="cam-card">
-                <div class="cam-header">
-                    <span><input type="checkbox" checked id="chk3"> ☑ Left Blind Spot</span>
-                    <span id="badge3" class="badge-status badge-offline">OFFLINE</span>
-                </div>
-                <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph3">🎥 CAMERA DISCONNECTED</div>
-                    <video id="video3" autoplay playsinline muted></video>
-                </div>
-                <div class="cam-control-bar">
-                    <select class="cam-select" onchange="handleCamSelect(3, this.value)">
-                        <option value="none">-- Select Camera Input --</option>
-                        <option value="otg">🔌 USB / Left Cam</option>
-                        <option value="wificam">📡 WiFi IP Camera</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Cam 4 -->
-            <div class="cam-card">
-                <div class="cam-header">
-                    <span><input type="checkbox" checked id="chk4"> ☑ Right Blind Spot</span>
-                    <span id="badge4" class="badge-status badge-offline">OFFLINE</span>
-                </div>
-                <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph4">🎥 CAMERA DISCONNECTED</div>
-                    <video id="video4" autoplay playsinline muted></video>
-                </div>
-                <div class="cam-control-bar">
-                    <select class="cam-select" onchange="handleCamSelect(4, this.value)">
-                        <option value="none">-- Select Camera Input --</option>
-                        <option value="otg">🔌 USB / Right Cam</option>
-                        <option value="wificam">📡 WiFi IP Camera</option>
-                    </select>
-                </div>
-            </div>
-
         </div>
 
-        <!-- Lower Panels -->
-        <div class="dashboard-panels">
-            <div class="panel-box">
-                <div class="panel-header">
-                    <span>📊 Live Data Monitor (ALPR & Speed)</span>
-                    <span style="color:#10b981;">● LIVE SYNC</span>
-                </div>
-                <div class="alpr-list">
-                    <div class="alpr-item"><span style="color:#facc15;">[NY-5544] Distance: 9.4m</span> <span style="color:#ef4444; font-weight:bold;">88 km/h</span></div>
-                    <div class="alpr-item"><span style="color:#facc15;">[ABC-1234] Distance: 14.4m</span> <span style="color:#10b981;">40 km/h</span></div>
-                    <div class="alpr-item"><span style="color:#facc15;">[UAE-9012] Distance: 2.7m</span> <span style="color:#ef4444; font-weight:bold;">79 km/h</span></div>
-                </div>
-            </div>
-
-            <div class="panel-box">
-                <div class="panel-header">
-                    <span>📍 Satellite GPS Navigation</span>
-                </div>
-                <div id="map"></div>
-            </div>
+        <div style="background: var(--panel-bg); padding: 10px; border-radius: 4px; border: 1px solid var(--border-color);">
+            <div style="font-size: 12px; color: var(--accent-cyan); margin-bottom: 5px;">📍 GPS Location</div>
+            <div id="map"></div>
         </div>
     </div>
 
-    <!-- WiFi Action Camera Setup Modal -->
+    <!-- WiFi Action Camera Modal -->
     <div id="wifiCamModal" class="modal">
         <div class="modal-body">
-            <h3 style="color: var(--accent-cyan); margin-bottom: 10px;">📡 WiFi Action Cam (ActionCam_341736cf1448)</h3>
+            <h4 style="color: var(--accent-cyan); margin-bottom: 10px;">📡 ActionCam (ActionCam_341736cf1448)</h4>
             <div class="form-group">
-                <label>Select Camera Box:</label>
-                <select id="targetCamSlot">
+                <label>Select Cam Slot:</label>
+                <select id="targetCamSlot" style="width:100%; padding:8px; background:#050a15; color:#fff; border:1px solid #1e293b;">
                     <option value="1">Cam 1 (Front)</option>
                     <option value="2">Cam 2 (Rear)</option>
-                    <option value="3">Cam 3 (Left)</option>
-                    <option value="4">Cam 4 (Right)</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Action Camera IP / Stream URL:</label>
-                <input type="text" id="actionCamUrl" value="http://192.168.1.1:8080/live" placeholder="e.g. http://192.168.1.1:8080/live or rtsp://...">
+                <label>Camera Stream URL / IP:</label>
+                <input type="text" id="actionCamUrl" value="http://192.168.1.1:8080/?action=stream">
             </div>
-            <button class="ctrl-btn" style="width: 100%; background: #0284c7; color:#fff;" onclick="connectWiFiActionCam()">Connect WiFi Cam</button>
-            <button class="ctrl-btn" style="width: 100%; margin-top: 5px; background: #334155; color:#fff;" onclick="closeModal('wifiCamModal')">Cancel</button>
+            <button class="ctrl-btn" style="width: 100%; background: #0284c7; color:#fff;" onclick="connectWiFiActionCam()">Connect WiFi Stream</button>
+            <button class="ctrl-btn" style="width: 100%; margin-top: 5px; background: #334155; color:#fff;" onclick="closeModal('wifiCamModal')">Close</button>
         </div>
     </div>
 
-    <!-- Auth Modal (Login / Registration with 5-Digit Unique ID) -->
+    <!-- Local Auth Modal -->
     <div id="authModal" class="modal">
         <div class="modal-body">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <button class="ctrl-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Login</button>
-                <button class="ctrl-btn" id="tabRegBtn" onclick="switchAuthTab('reg')">Register Account</button>
-                <button class="ctrl-btn" id="tabForgotBtn" onclick="switchAuthTab('forgot')">Forgot Password / OTP</button>
+            <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+                <button class="ctrl-btn" style="flex:1" onclick="switchTab('login')">Login</button>
+                <button class="ctrl-btn" style="flex:1" onclick="switchTab('reg')">Register</button>
             </div>
 
-            <!-- Login Form -->
+            <!-- Login -->
             <div id="loginForm">
-                <div class="form-group">
-                    <label>Email Address:</label>
-                    <input type="email" id="loginEmail" placeholder="Enter email">
-                </div>
-                <div class="form-group">
-                    <label>Password:</label>
-                    <input type="password" id="loginPassword" placeholder="Enter password">
-                </div>
-                <button class="ctrl-btn" style="width: 100%; margin-top: 5px;" onclick="executeLogin()">Login Account</button>
+                <div class="form-group"><label>Email:</label><input type="email" id="loginEmail"></div>
+                <div class="form-group"><label>Password:</label><input type="password" id="loginPassword"></div>
+                <button class="ctrl-btn" style="width: 100%; background:#0284c7; color:#fff;" onclick="executeLogin()">Login</button>
             </div>
 
-            <!-- Registration Form -->
+            <!-- Registration -->
             <div id="regForm" style="display: none;">
-                <div class="form-group">
-                    <label>Full Name:</label>
-                    <input type="text" id="regName" placeholder="Enter Full Name">
-                </div>
-                <div class="form-group">
-                    <label>Mobile Number:</label>
-                    <input type="text" id="regMobile" placeholder="+8801XXXXXXXXX">
-                </div>
-                <div class="form-group">
-                    <label>Email Address:</label>
-                    <input type="email" id="regEmail" placeholder="Enter Email">
-                </div>
-                <div class="form-group">
-                    <label>New Password:</label>
-                    <input type="password" id="regPassword" placeholder="Enter Password">
-                </div>
-                <div class="form-group">
-                    <label>Country:</label>
-                    <select id="regCountry">
-                        <option value="Bangladesh">Bangladesh</option>
-                        <option value="Saudi Arabia">Saudi Arabia</option>
-                        <option value="UAE">United Arab Emirates</option>
-                        <option value="USA">United States</option>
-                    </select>
-                </div>
-                <button class="ctrl-btn" style="width: 100%; background: #10b981; color:#fff;" onclick="executeRegister()">Register (Generates 5-Digit ID)</button>
-            </div>
-
-            <!-- Forgot Password OTP Form -->
-            <div id="forgotForm" style="display: none;">
-                <div class="form-group">
-                    <label>Registered Email:</label>
-                    <input type="email" id="forgotEmail" placeholder="Enter registered email">
-                </div>
-                <button class="ctrl-btn" style="width: 100%; background: #eab308; color:#000;" onclick="sendPasswordOTP()">Send Password Reset / OTP</button>
+                <div class="form-group"><label>Full Name:</label><input type="text" id="regName"></div>
+                <div class="form-group"><label>Mobile:</label><input type="text" id="regMobile"></div>
+                <div class="form-group"><label>Email:</label><input type="email" id="regEmail"></div>
+                <div class="form-group"><label>Password:</label><input type="password" id="regPassword"></div>
+                <button class="ctrl-btn" style="width: 100%; background: #10b981; color:#fff;" onclick="executeRegister()">Create Account (Auto 5-Digit ID)</button>
             </div>
 
             <button class="ctrl-btn" style="width: 100%; margin-top: 10px; background: #334155; color:#fff;" onclick="closeModal('authModal')">Close</button>
         </div>
     </div>
 
-    <!-- Footer -->
     <footer>
-        Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
+        Developer: <span style="color:var(--accent-cyan)">Mohammad Billal Hossain Shakil</span>
     </footer>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
-            authDomain: "road-traffic-data-8aec1.firebaseapp.com",
-            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com",
-            projectId: "road-traffic-data-8aec1",
-            storageBucket: "road-traffic-data-8aec1.firebasestorage.app",
-            messagingSenderId: "714117386299",
-            appId: "1:714117386299:web:501fc2a8ac89a627af0c1e",
-            measurementId: "G-CEMEBF2DN5"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
+        // Check Active Session
+        window.onload = function() {
+            const map = L.map('map').setView([21.4858, 39.1925], 13);
+            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] }).addTo(map);
 
-        // Track Auth & Display Unique 5-Digit User ID
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                db.ref('users/' + user.uid).once('value', snapshot => {
-                    if (snapshot.exists()) {
-                        const data = snapshot.val();
-                        document.getElementById('userProfileBadge').innerText = `👤 ${data.name} | ID: ${data.userId}`;
-                    } else {
-                        document.getElementById('userProfileBadge').innerText = `👤 User: ${user.email.split('@')[0]}`;
-                    }
-                });
-            } else {
-                document.getElementById('userProfileBadge').innerText = "Guest Mode (Click to Login)";
+            const activeUser = JSON.parse(localStorage.getItem('activeUser'));
+            if(activeUser) {
+                document.getElementById('userProfileBadge').innerText = `👤 ${activeUser.name} (ID: ${activeUser.id})`;
             }
-        });
+        };
 
-        // Generate 5-Digit Unique ID
         function generate5DigitID() { return Math.floor(10000 + Math.random() * 90000); }
 
-        // User Registration
         function executeRegister() {
             const name = document.getElementById('regName').value;
-            const mobile = document.getElementById('regMobile').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
-            const country = document.getElementById('regCountry').value;
 
-            if(!name || !mobile || !email || !password) {
-                alert("দয়া করে সমস্ত ফিল্ড সঠিকভাবে পূরণ করুন!");
-                return;
-            }
+            if(!name || !email || !password) { alert("সব তথ্য পূরণ করুন!"); return; }
 
             const uniqueID = generate5DigitID();
+            const userData = { id: uniqueID, name: name, email: email, password: password };
 
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(cred => {
-                    return db.ref('users/' + cred.user.uid).set({
-                        userId: uniqueID, name: name, mobile: mobile, email: email, country: country
-                    });
-                })
-                .then(() => {
-                    alert(`রেজিস্ট্রেশন সফল হয়েছে!\nআপনার ইউনিক ইউজার আইডি: ${uniqueID}`);
-                    closeModal('authModal');
-                })
-                .catch(err => alert("Error: " + err.message));
+            localStorage.setItem('user_' + email, JSON.stringify(userData));
+            localStorage.setItem('activeUser', JSON.stringify(userData));
+
+            alert(`রেজিস্ট্রেশন সফল হয়েছে!\nআপনার ইউনিক ইউজার আইডি: ${uniqueID}`);
+            document.getElementById('userProfileBadge').innerText = `👤 ${name} (ID: ${uniqueID})`;
+            closeModal('authModal');
         }
 
-        // User Login
         function executeLogin() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => closeModal('authModal'))
-                .catch(err => alert("পাসওয়ার্ড বা ইমেইল ভুল! " + err.message));
+            const storedUser = JSON.parse(localStorage.getItem('user_' + email));
+
+            if(storedUser && storedUser.password === password) {
+                localStorage.setItem('activeUser', JSON.stringify(storedUser));
+                document.getElementById('userProfileBadge').innerText = `👤 ${storedUser.name} (ID: ${storedUser.id})`;
+                alert("লগইন সফল হয়েছে!");
+                closeModal('authModal');
+            } else {
+                alert("ইমেইল বা পাসওয়ার্ড সঠিক নয়!");
+            }
         }
 
-        // Password Reset OTP
-        function sendPasswordOTP() {
-            const email = document.getElementById('forgotEmail').value;
-            if(!email) { alert("ইমেইল আইডি লিখুন!"); return; }
-
-            auth.sendPasswordResetEmail(email)
-                .then(() => {
-                    alert("আপনার ইমেইলে ওটিপি লিংক পাঠানো হয়েছে।");
-                    closeModal('authModal');
-                })
-                .catch(err => alert("Error: " + err.message));
-        }
-
-        // Camera Source Selection Handler
         function handleCamSelect(slot, type) {
-            if (type === 'otg') {
-                connectOTGCam(slot);
-            } else if (type === 'wificam') {
+            if (type === 'otg') connectOTGCam(slot);
+            else if (type === 'wificam') {
                 document.getElementById('targetCamSlot').value = slot;
                 openModal('wifiCamModal');
             }
         }
 
-        // Connect USB/OTG Camera
         async function connectOTGCam(slot) {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true });
                 const video = document.getElementById(`video${slot}`);
+                document.getElementById(`img${slot}`).style.display = 'none';
+                video.style.display = 'block';
                 video.srcObject = stream;
                 document.getElementById(`ph${slot}`).style.display = 'none';
                 document.getElementById(`badge${slot}`).className = 'badge-status badge-online';
                 document.getElementById(`badge${slot}`).innerText = 'ONLINE (USB/OTG)';
-            } catch (err) {
-                alert(`Slot ${slot} Camera Error: ` + err.message);
-            }
+            } catch (err) { alert("ক্যামেরা অন করা যায়নি: " + err.message); }
         }
 
-        // Open WiFi Action Camera Setup Modal
-        function openWiFiCamModal() {
-            openModal('wifiCamModal');
-        }
-
-        // Connect WiFi Action Camera Stream
         function connectWiFiActionCam() {
             const slot = document.getElementById('targetCamSlot').value;
             const url = document.getElementById('actionCamUrl').value;
 
-            const ph = document.getElementById(`ph${slot}`);
-            ph.innerHTML = `📡 4K ActionCam Stream Active:<br><span style="color:#00f2fe; font-size:10px;">${url}</span>`;
+            document.getElementById(`video${slot}`).style.display = 'none';
+            const img = document.getElementById(`img${slot}`);
+            img.style.display = 'block';
+            img.src = url;
+
+            document.getElementById(`ph${slot}`).style.display = 'none';
             document.getElementById(`badge${slot}`).className = 'badge-status badge-online';
-            document.getElementById(`badge${slot}`).innerText = 'ONLINE (WiFi 4K Cam)';
+            document.getElementById(`badge${slot}`).innerText = 'ONLINE (WiFi Stream)';
             closeModal('wifiCamModal');
         }
 
-        function switchAuthTab(tab) {
-            document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
-            document.getElementById('regForm').style.display = tab === 'reg' ? 'block' : 'none';
-            document.getElementById('forgotForm').style.display = tab === 'forgot' ? 'block' : 'none';
-        }
-
-        function setGridBox(boxCount) {
-            document.getElementById('cameraGrid').className = `camera-grid box-${boxCount}`;
-        }
-
-        function exportData(type) {
-            const logs = "Plate,Distance,Speed\nNY-5544,9.4m,88km/h\nABC-1234,14.4m,40km/h";
-            const blob = new Blob([logs], { type: type === 'csv' ? 'text/csv' : 'text/xml' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `DriveVision_Data.${type}`;
-            a.click();
-        }
-
-        // Satellite GPS Map Setup
-        let map;
-        function initMap() {
-            map = L.map('map').setView([21.4858, 39.1925], 14);
-            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains: ['mt0', 'mt1', 'mt2', 'mt3'] }).addTo(map);
-            L.marker([21.4858, 39.1925]).addTo(map).bindPopup('Vehicle Location');
+        function switchTab(t) {
+            document.getElementById('loginForm').style.display = t === 'login' ? 'block' : 'none';
+            document.getElementById('regForm').style.display = t === 'reg' ? 'block' : 'none';
         }
 
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
-
-        window.onload = function() {
-            initMap();
-        };
     </script>
 </body>
-                            </html>
+    </html>
