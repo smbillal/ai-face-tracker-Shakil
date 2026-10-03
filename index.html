@@ -3,648 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveVision AI Dashboard - Fully Integrated</title>
-    
-    <!-- Leaflet CSS for Maps -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-    <style>
-        :root {
-            --bg-color: #0b0f19;
-            --card-bg: #131b2e;
-            --accent-color: #00f2fe;
-            --text-color: #ffffff;
-            --border-color: #1e293b;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            padding-bottom: 90px;
-            overflow-x: hidden;
-        }
-
-        header {
-            background: #070a12;
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .brand {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--accent-color);
-        }
-
-        .nav-tools {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            background: #1e293b;
-            color: #fff;
-            border: 1px solid var(--accent-color);
-            padding: 8px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: 0.3s;
-        }
-
-        .btn:hover {
-            background: var(--accent-color);
-            color: #000;
-        }
-
-        .btn-admin {
-            display: none; /* Hide by default, show ONLY for smshakilco@gmail.com */
-            background: #ff4757;
-            border-color: #ff6b81;
-        }
-
-        .container {
-            padding: 15px;
-            max-width: 100%;
-        }
-
-        .camera-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .cam-box {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            overflow: hidden;
-            position: relative;
-            min-height: 220px;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .cam-header {
-            background: #0f172a;
-            padding: 8px 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-        }
-
-        .cam-preview {
-            width: 100%;
-            height: 180px;
-            background: #000;
-            object-fit: cover;
-        }
-
-        /* Toggle Switches */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 36px;
-            height: 20px;
-        }
-
-        .switch input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute; cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #334155;
-            transition: .4s; border-radius: 20px;
-        }
-
-        .slider:before {
-            position: absolute; content: "";
-            height: 14px; width: 14px;
-            left: 3px; bottom: 3px;
-            background-color: white;
-            transition: .4s; border-radius: 50%;
-        }
-
-        input:checked + .slider { background-color: var(--accent-color); }
-        input:checked + .slider:before { transform: translateX(16px); }
-
-        .panel-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-        }
-
-        .panel-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            padding: 15px;
-            border-radius: 8px;
-        }
-
-        #map {
-            width: 100%;
-            height: 220px;
-            border-radius: 6px;
-            margin-top: 10px;
-        }
-
-        .ad-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 10px;
-            margin: 15px 0;
-        }
-
-        .ad-box {
-            background: #0a0e17;
-            border: 1px dashed #334155;
-            min-height: 80px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 5px;
-            border-radius: 6px;
-        }
-
-        footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            background: #05070e;
-            border-top: 2px solid var(--accent-color);
-            padding: 12px 20px;
-            text-align: center;
-            z-index: 9999;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
-        }
-
-        .footer-text {
-            color: #ffffff;
-            font-size: 16px;
-            font-weight: 600;
-            letter-spacing: 0.5px;
-        }
-
-        .footer-text span {
-            color: var(--accent-color);
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85);
-            z-index: 10000;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
-        }
-
-        .modal-content {
-            background: var(--card-bg);
-            border: 1px solid var(--accent-color);
-            padding: 20px;
-            border-radius: 10px;
-            max-width: 500px;
-            width: 100%;
-            max-height: 85vh;
-            overflow-y: auto;
-        }
-
-        textarea {
-            width: 100%;
-            height: 65px;
-            background: #070a12;
-            color: #00f2fe;
-            border: 1px solid var(--border-color);
-            border-radius: 5px;
-            padding: 8px;
-            font-family: monospace;
-            font-size: 12px;
-            margin-bottom: 10px;
-        }
-
-        .offline-badge {
-            display: none;
-            background: #ff4757;
-            color: #fff;
-            padding: 4px 8px;
-            font-size: 11px;
-            border-radius: 4px;
-        }
-    </style>
+    <title>DRIVEVISION AI - Next-Gen Smart Dashboard & Fleet Hub</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#05070a">
+    <link rel="stylesheet" href="style.css">
+    <!-- Leaflet CSS for Embedded Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 </head>
 <body>
 
-    <header>
-        <div class="brand">DRIVEVISION AI <span style="font-size: 12px; color: #888;">v18.0</span></div>
+    <!-- Cyber Header Navigation Bar -->
+    <header class="cyber-header">
+        <div class="logo-area">
+            <i class="fa-solid fa-shield-halved logo-icon"></i>
+            <span class="logo-text">DRIVEVISION <small>AI v18.0</small></span>
+        </div>
         
-        <div class="nav-tools">
-            <span id="deviceStats" style="font-size: 12px; color: #aaa;">Total: 100 | Online: 10 | Offline: 90</span>
-            <span id="offlineNotice" class="offline-badge">OFFLINE RECORDING ACTIVE</span>
-            <button class="btn" onclick="testRearCam()">Test Rear Cam</button>
-            <button class="btn" onclick="startGridRecording()">Record Grid</button>
-            <button id="adminBtn" class="btn btn-admin" onclick="toggleAdminPanel()">Admin Panel</button>
-            <button id="authBtn" class="btn" onclick="openAuthModal()">Login / Register</button>
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active" onclick="switchTab('dashboard')"><i class="fa-solid fa-gauge-high"></i> Dashboard</a>
+            <a href="#" class="nav-item" onclick="openModal('hubModal')"><i class="fa-solid fa-network-wired"></i> Device Hub</a>
+            <a href="#" class="nav-item" onclick="openModal('featuresModal')"><i class="fa-solid fa-layer-group"></i> Features</a>
+            <a href="#" class="nav-item" onclick="openModal('contactModal')"><i class="fa-solid fa-envelope"></i> Contact</a>
+            <a href="admin.html" class="nav-item admin-link"><i class="fa-solid fa-user-shield"></i> Admin Panel</a>
+        </nav>
+
+        <div class="user-profile-badge" id="userBadge" onclick="openAuthOrProfile()">
+            <i class="fa-solid fa-user-astronaut"></i>
+            <span id="userBadgeText">Guest</span>
         </div>
     </header>
 
-    <div class="container">
-        
-        <!-- Cameras Grid -->
-        <div class="camera-grid">
-            <div class="cam-box" id="box1">
-                <div class="cam-header">
-                    <span>Front Cam (Distance Grid)</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(1, this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <video id="video1" class="cam-preview" autoplay playsinline muted></video>
+    <!-- Main App Container -->
+    <main class="app-container">
+        <!-- Control Toolbar -->
+        <div class="toolbar">
+            <div class="btn-group">
+                <button class="cyber-btn" onclick="setBoxCount(1)"><i class="fa-solid fa-square"></i> 1 Box</button>
+                <button class="cyber-btn" onclick="setBoxCount(2)"><i class="fa-solid fa-table-columns"></i> 2 Boxes</button>
+                <button class="cyber-btn" onclick="setBoxCount(3)"><i class="fa-solid fa-border-all"></i> 3 Boxes</button>
+                <button class="cyber-btn active" onclick="setBoxCount(4)"><i class="fa-solid fa-grip"></i> 4 Boxes</button>
             </div>
 
-            <div class="cam-box" id="box2">
-                <div class="cam-header">
-                    <span>Rear Cam (Reverse Grid)</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(2, this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <video id="video2" class="cam-preview" autoplay playsinline muted></video>
-            </div>
-
-            <div class="cam-box" id="box3">
-                <div class="cam-header">
-                    <span>Left Blind Spot</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(3, this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <video id="video3" class="cam-preview" autoplay playsinline muted></video>
-            </div>
-
-            <div class="cam-box" id="box4">
-                <div class="cam-header">
-                    <span>Right Blind Spot</span>
-                    <label class="switch">
-                        <input type="checkbox" checked onchange="toggleCam(4, this.checked)">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                <video id="video4" class="cam-preview" autoplay playsinline muted></video>
+            <div class="btn-group">
+                <button class="cyber-btn rec-btn" id="recBtn" onclick="toggleRecording()"><i class="fa-solid fa-circle"></i> Quad Rec</button>
+                <button class="cyber-btn" onclick="togglePhoneCam()"><i class="fa-solid fa-mobile-screen-button"></i> Test Phone Cam</button>
+                <button class="cyber-btn" onclick="toggleDriverMode()"><i class="fa-solid fa-user-check"></i> Driver Mode</button>
+                <button class="cyber-btn gold" onclick="exportDataLog('csv')"><i class="fa-solid fa-file-csv"></i> CSV Export</button>
+                <button class="cyber-btn gold" onclick="exportDataLog('xml')"><i class="fa-solid fa-file-code"></i> XML Export</button>
             </div>
         </div>
 
-        <!-- 4 Ad Banner Slots -->
-        <div class="ad-container">
-            <div class="ad-box" id="adSlot1"><span style="color:#555;">Ad Slot 1</span></div>
-            <div class="ad-box" id="adSlot2"><span style="color:#555;">Ad Slot 2</span></div>
-            <div class="ad-box" id="adSlot3"><span style="color:#555;">Ad Slot 3</span></div>
-            <div class="ad-box" id="adSlot4"><span style="color:#555;">Ad Slot 4</span></div>
-        </div>
+        <!-- Camera Feed Display Area -->
+        <section class="camera-grid grid-4" id="cameraGrid">
+            <!-- Dynamic Camera Boxes Rendered Here via JS -->
+        </section>
 
-        <!-- Lower Panels -->
-        <div class="panel-grid">
-            <div class="panel-card">
-                <h3>Live Tracking Monitor (ALPR & Speed)</h3>
-                <div id="trackingLogs" style="margin-top: 10px; font-size: 13px; color: #00f2fe;">
-                    <div>• Real-time camera streams active...</div>
+        <!-- Dynamic Lower Telemetry & Embedded Maps Section -->
+        <section class="bottom-hud-row">
+            <!-- Telemetry Data Log Panel -->
+            <div class="cyber-panel telemetry-box">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-list-check"></i> Live Tracking Data Monitor (ALPR & Speed)</h3>
+                    <span class="live-tag red-blink">● LIVE SYNC</span>
+                </div>
+                <div class="telemetry-list" id="telemetryLog">
+                    <!-- Dynamic Log Items Rendered Here -->
                 </div>
             </div>
 
-            <div class="panel-card">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <h3>Satellite GPS Navigation</h3>
-                    <button class="btn" style="padding: 4px 8px; font-size: 11px;" onclick="toggleGPS()">GPS: ON</button>
+            <!-- Embedded Live Map Panel -->
+            <div class="cyber-panel map-box" id="mapBoxContainer">
+                <div class="panel-header">
+                    <h3><i class="fa-solid fa-location-dot"></i> Embedded Google Maps Navigation</h3>
+                    <button class="mini-btn" onclick="toggleMapFullscreen()"><i class="fa-solid fa-expand"></i> Resize / Fullscreen</button>
                 </div>
-                <div id="map"></div>
+                <div class="map-controls">
+                    <input type="text" id="destInput" placeholder="Enter Destination Location...">
+                    <button class="cyber-btn blue" onclick="setMapDestination()"><i class="fa-solid fa-route"></i> Set Route</button>
+                </div>
+                <div id="liveMap"></div>
             </div>
-        </div>
+        </section>
+    </main>
 
-    </div>
-
-    <!-- Admin Panel Modal -->
-    <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <h2 style="color: var(--accent-color); margin-bottom: 15px;">Admin Control Panel</h2>
-            
-            <h4>Custom Ad Management (Paste HTML / JS)</h4>
-            <label style="font-size: 12px;">Ad Slot 1 Code:</label>
-            <textarea id="ad1Input" placeholder="Paste HTML / JS Code here..."></textarea>
-            
-            <label style="font-size: 12px;">Ad Slot 2 Code:</label>
-            <textarea id="ad2Input" placeholder="Paste HTML / JS Code here..."></textarea>
-            
-            <label style="font-size: 12px;">Ad Slot 3 Code:</label>
-            <textarea id="ad3Input" placeholder="Paste HTML / JS Code here..."></textarea>
-            
-            <label style="font-size: 12px;">Ad Slot 4 Code:</label>
-            <textarea id="ad4Input" placeholder="Paste HTML / JS Code here..."></textarea>
-
-            <button class="btn" style="width: 100%; margin-top: 10px;" onclick="saveAdSettings()">Save Ads & Publish</button>
-            <button class="btn" style="width: 100%; margin-top: 8px; background: #334155;" onclick="toggleAdminPanel()">Close Panel</button>
-        </div>
-    </div>
-
-    <!-- Auth Modal (Login / Register / Forgot Password) -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <h3 style="color: var(--accent-color); margin-bottom: 15px;" id="authTitle">User Authentication</h3>
-            <input type="email" id="authEmail" placeholder="Enter Email" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #070a12; color: #fff; border: 1px solid var(--border-color); border-radius: 5px;">
-            <input type="password" id="authPassword" placeholder="Enter Password" style="width: 100%; padding: 10px; margin-bottom: 10px; background: #070a12; color: #fff; border: 1px solid var(--border-color); border-radius: 5px;">
-            
-            <button class="btn" style="width: 100%; margin-bottom: 8px;" onclick="submitLogin()">Login</button>
-            <button class="btn" style="width: 100%; margin-bottom: 8px; background: #00b894; border-color: #55efc4;" onclick="submitRegister()">Register (Single Account)</button>
-            <button class="btn" style="width: 100%; margin-bottom: 8px; background: #fdcb6e; color: #000;" onclick="submitForgotPassword()">Forgot Password? (OTP / Reset Link)</button>
-            <button class="btn" style="width: 100%; background: #334155;" onclick="closeAuthModal()">Cancel</button>
-        </div>
-    </div>
-
-    <!-- Fixed Footer -->
-    <footer>
-        <div class="footer-text">
-            Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
+    <!-- Footer Developer Ticker Scroll -->
+    <footer class="cyber-footer">
+        <div class="ticker-wrap">
+            <div class="ticker-move">
+                ⚡ DRIVEVISION AI v18.0 System Online | Developed by: Shakil | Support Email: smshakilco@gmail.com | GPS Status: ACTIVE | Encryption: AES-256 | Multi-Cam Server: 20 Channels Ready ⚡
+            </div>
         </div>
     </footer>
 
-    <!-- Leaflet JS -->
+    <!-- MODAL: Device Connection Hub -->
+    <div class="modal-overlay" id="hubModal">
+        <div class="modal-content cyber-panel">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-network-wired"></i> Multi-Device Connection Hub</h2>
+                <button class="close-btn" onclick="closeModal('hubModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="hub-tabs">
+                    <button class="cyber-btn active" onclick="switchHubTab('wifi')">Wi-Fi Auto Connect</button>
+                    <button class="cyber-btn" onclick="switchHubTab('usb')">USB Type-C</button>
+                    <button class="cyber-btn" onclick="switchHubTab('bt')">Bluetooth Sync</button>
+                </div>
+                <div id="hubStatus" class="hub-status-box">
+                    <p><i class="fa-solid fa-wifi"></i> Server Name: <strong>DRIVEVISION_SERVER_HUB</strong> Active. Discoverable by cameras & devices.</p>
+                    <button class="cyber-btn blue" onclick="simulateDeviceConnect()">Scan & Auto Pair Devices</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Auth / Registration & Unique ID Generator -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal-content cyber-panel">
+            <div class="modal-header">
+                <h2 id="authModalTitle"><i class="fa-solid fa-user-plus"></i> Sign Up / Login</h2>
+                <button class="close-btn" onclick="closeModal('authModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="authTabs" class="hub-tabs">
+                    <button class="cyber-btn active" onclick="switchAuthTab('reg')">Registration</button>
+                    <button class="cyber-btn" onclick="switchAuthTab('login')">Login</button>
+                </div>
+
+                <!-- Registration Form -->
+                <form id="regForm" onsubmit="handleRegistration(event)">
+                    <input type="text" id="regName" placeholder="Full Name" required>
+                    <input type="text" id="regCountry" placeholder="Country" required>
+                    <input type="number" id="regAge" placeholder="Age" required>
+                    <input type="tel" id="regPhone" placeholder="Phone Number" required>
+                    <input type="email" id="regEmail" placeholder="Email Address" required>
+                    <input type="password" id="regPass" placeholder="Password" required>
+                    <button type="submit" class="cyber-btn blue wide-btn">Create Account (Generates Unique ID)</button>
+                </form>
+
+                <!-- Login Form -->
+                <form id="loginForm" style="display:none;" onsubmit="handleLogin(event)">
+                    <input type="text" id="loginIdOrEmail" placeholder="Email or 6-Digit Unique ID" required>
+                    <input type="password" id="loginPass" placeholder="Password" required>
+                    <button type="submit" class="cyber-btn green wide-btn">Login</button>
+                </form>
+
+                <!-- Profile Card (When Logged In) -->
+                <div id="profileCard" style="display:none;" class="profile-card">
+                    <i class="fa-solid fa-id-card-clip profile-avatar"></i>
+                    <h3 id="profName">User Name</h3>
+                    <p class="id-badge">UNIQUE ID: <span id="profId">582914</span></p>
+                    <p>Country: <span id="profCountry">United States</span> | Age: <span id="profAge">25</span></p>
+                    <p>Phone: <span id="profPhone">+10000000000</span></p>
+                    <p>Email: <span id="profEmail">user@example.com</span></p>
+                    <button class="cyber-btn red" onclick="handleLogout()">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Features Info -->
+    <div class="modal-overlay" id="featuresModal">
+        <div class="modal-content cyber-panel">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-circle-info"></i> DRIVEVISION AI Features</h2>
+                <button class="close-btn" onclick="closeModal('featuresModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <ul class="feature-info-list">
+                    <li><i class="fa-solid fa-check green-text"></i> 20 Backend Channel Support with Dynamic Auto-Expansion Camera Boxes.</li>
+                    <li><i class="fa-solid fa-check green-text"></i> Front and Rear Dynamic Perspective Distance Grid Lines Overlay.</li>
+                    <li><i class="fa-solid fa-check green-text"></i> Driver Fatigue/Drowsiness Alerts, ADAS Signaling & 3-Finger Gesture Snaps.</li>
+                    <li><i class="fa-solid fa-check green-text"></i> Embedded Google/OpenStreetMap Live Navigation with Route Drawing.</li>
+                    <li><i class="fa-solid fa-check green-text"></i> Real-time ALPR Plate Telemetry Logging and Export (CSV & XML).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Contact Developer -->
+    <div class="modal-overlay" id="contactModal">
+        <div class="modal-content cyber-panel">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-headset"></i> Contact Developer</h2>
+                <button class="close-btn" onclick="closeModal('contactModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p><strong>Developer:</strong> Shakil</p>
+                <p><strong>Email:</strong> smshakilco@gmail.com</p>
+                <p><strong>System Version:</strong> DRIVEVISION Enterprise Web App v18.0</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Audio Alert -->
+    <audio id="sleepAlertAudio" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+    <!-- Leaflet JS for Maps -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <script>
-        // --- 1. YOUR LIVE FIREBASE CONFIGURATION ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
-            authDomain: "road-traffic-data-8aec1.firebaseapp.com",
-            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com",
-            projectId: "road-traffic-data-8aec1",
-            storageBucket: "road-traffic-data-8aec1.firebasestorage.app",
-            messagingSenderId: "714117386299",
-            appId: "1:714117386299:web:501fc2a8ac89a627af0c1e",
-            measurementId: "G-CEMEBF2DN5"
-        };
-        
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-
-        // Ensure session remains active across server updates
-        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-        const ADMIN_EMAIL = "smshakilco@gmail.com";
-
-        auth.onAuthStateChanged(user => {
-            const authBtn = document.getElementById('authBtn');
-            const adminBtn = document.getElementById('adminBtn');
-
-            if (user) {
-                authBtn.innerText = "Logout (" + user.email.split('@')[0] + ")";
-                authBtn.onclick = () => auth.signOut();
-                
-                // Show Admin Panel ONLY for smshakilco@gmail.com
-                if (user.email === ADMIN_EMAIL) {
-                    adminBtn.style.display = "inline-block";
-                } else {
-                    adminBtn.style.display = "none";
-                }
-            } else {
-                authBtn.innerText = "Login / Register";
-                authBtn.onclick = () => openAuthModal();
-                adminBtn.style.display = "none";
-            }
-        });
-
-        // --- AUTHENTICATION FUNCTIONS ---
-        function openAuthModal() {
-            document.getElementById('authModal').style.display = 'flex';
-        }
-
-        function closeAuthModal() {
-            document.getElementById('authModal').style.display = 'none';
-        }
-
-        function submitLogin() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            auth.signInWithEmailAndPassword(email, password)
-                .then(() => closeAuthModal())
-                .catch(err => alert("Login Error: " + err.message));
-        }
-
-        function submitRegister() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            auth.createUserWithEmailAndPassword(email, password)
-                .then(() => {
-                    alert("Registration Successful!");
-                    closeAuthModal();
-                })
-                .catch(err => alert("Registration Error: " + err.message));
-        }
-
-        function submitForgotPassword() {
-            const email = document.getElementById('authEmail').value;
-            if (!email) {
-                alert("Please enter your email to reset password.");
-                return;
-            }
-            auth.sendPasswordResetEmail(email)
-                .then(() => alert("Password reset link / OTP has been sent to your email."))
-                .catch(err => alert("Error: " + err.message));
-        }
-
-        // --- 2. CAMERA CONTROLS ---
-        async function testRearCam() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: { exact: "environment" } }
-                });
-                document.getElementById('video1').srcObject = stream;
-            } catch (err) {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
-                document.getElementById('video1').srcObject = stream;
-            }
-        }
-
-        function toggleCam(id, isChecked) {
-            const videoElem = document.getElementById(`video${id}`);
-            if (!isChecked && videoElem.srcObject) {
-                videoElem.srcObject.getTracks().forEach(track => track.stop());
-                videoElem.srcObject = null;
-            } else if (isChecked) {
-                testRearCam();
-            }
-        }
-
-        // --- 3. SATELLITE GPS MAP ---
-        let map, marker, watchId;
-        
-        function initMap() {
-            map = L.map('map').setView([21.4858, 39.1925], 15);
-
-            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
-                maxZoom: 20,
-                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-                attribution: 'Map data &copy; Google Satellite'
-            }).addTo(map);
-
-            marker = L.marker([21.4858, 39.1925]).addTo(map).bindPopup('Vehicle Location');
-
-            startGPS();
-        }
-
-        function startGPS() {
-            if (navigator.geolocation) {
-                watchId = navigator.geolocation.watchPosition(pos => {
-                    const latlng = [pos.coords.latitude, pos.coords.longitude];
-                    marker.setLatLng(latlng);
-                    map.panTo(latlng);
-                }, err => console.log(err), { enableHighAccuracy: true });
-            }
-        }
-
-        function toggleGPS() {
-            if (watchId) {
-                navigator.geolocation.clearWatch(watchId);
-                watchId = null;
-                alert("GPS Tracking Paused");
-            } else {
-                startGPS();
-                alert("GPS Tracking Activated");
-            }
-        }
-
-        window.onload = function() {
-            initMap();
-            loadAdSettings();
-        };
-
-        // --- 4. OFFLINE RECORDING SYSTEM ---
-        let mediaRecorder;
-        let recordedChunks = [];
-
-        window.addEventListener('offline', () => {
-            document.getElementById('offlineNotice').style.display = 'inline-block';
-        });
-
-        window.addEventListener('online', () => {
-            document.getElementById('offlineNotice').style.display = 'none';
-        });
-
-        function startGridRecording() {
-            const video1 = document.getElementById('video1');
-            if (!video1.srcObject) {
-                alert("Please turn on Rear Cam to test recording.");
-                return;
-            }
-
-            const stream = video1.srcObject;
-            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
-            recordedChunks = [];
-
-            mediaRecorder.ondataavailable = e => {
-                if (e.data.size > 0) recordedChunks.push(e.data);
-            };
-
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(recordedChunks, { type: 'video/webm' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                a.download = `DriveVision_Recording_${Date.now()}.webm`;
-                document.body.appendChild(a);
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 100);
-            };
-
-            mediaRecorder.start();
-            alert("Recording Started! Stopping and Downloading in 5 seconds...");
-            setTimeout(() => mediaRecorder.stop(), 5000);
-        }
-
-        // --- 5. AD MANAGER FOR ADMIN ---
-        function toggleAdminPanel() {
-            const modal = document.getElementById('adminModal');
-            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-        }
-
-        function saveAdSettings() {
-            const ad1 = document.getElementById('ad1Input').value;
-            const ad2 = document.getElementById('ad2Input').value;
-            const ad3 = document.getElementById('ad3Input').value;
-            const ad4 = document.getElementById('ad4Input').value;
-
-            const ads = { ad1, ad2, ad3, ad4 };
-            localStorage.setItem('drivevision_ads', JSON.stringify(ads));
-
-            if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
-                db.ref('ads').set(ads);
-            }
-
-            renderAds(ads);
-            toggleAdminPanel();
-            alert("Ads Updated Successfully!");
-        }
-
-        function loadAdSettings() {
-            const savedAds = localStorage.getItem('drivevision_ads');
-            if (savedAds) {
-                renderAds(JSON.parse(savedAds));
-            } else {
-                db.ref('ads').once('value', snapshot => {
-                    if (snapshot.exists()) renderAds(snapshot.val());
-                });
-            }
-        }
-
-        function renderAds(ads) {
-            if (ads.ad1) executeAdScript('adSlot1', ads.ad1);
-            if (ads.ad2) executeAdScript('adSlot2', ads.ad2);
-            if (ads.ad3) executeAdScript('adSlot3', ads.ad3);
-            if (ads.ad4) executeAdScript('adSlot4', ads.ad4);
-        }
-
-        function executeAdScript(slotId, code) {
-            const slot = document.getElementById(slotId);
-            slot.innerHTML = code;
-            
-            const scripts = slot.getElementsByTagName('script');
-            for (let script of scripts) {
-                const newScript = document.createElement('script');
-                if (script.src) {
-                    newScript.src = script.src;
-                } else {
-                    newScript.text = script.innerHTML;
-                }
-                document.body.appendChild(newScript);
-            }
-        }
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
