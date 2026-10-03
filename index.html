@@ -1,26 +1,265 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DriveVision AI Dashboard - Fully Integrated</title>
     
-    <!-- External Leaflet CSS for Maps -->
+    <!-- Leaflet CSS for Maps -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    
-    <!-- Custom CSS File -->
-    <link rel="stylesheet" href="style.css">
     
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --card-bg: #131b2e;
+            --accent-color: #00f2fe;
+            --text-color: #ffffff;
+            --border-color: #1e293b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 90px;
+            overflow-x: hidden;
+        }
+
+        header {
+            background: #070a12;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .brand {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+
+        .nav-tools {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #1e293b;
+            color: #fff;
+            border: 1px solid var(--accent-color);
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            background: var(--accent-color);
+            color: #000;
+        }
+
+        .btn-admin {
+            display: none;
+            background: #ff4757;
+            border-color: #ff6b81;
+        }
+
+        .container {
+            padding: 15px;
+            max-width: 100%;
+        }
+
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .cam-box {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+            min-height: 220px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cam-header {
+            background: #0f172a;
+            padding: 8px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+
+        .cam-preview {
+            width: 100%;
+            height: 180px;
+            background: #000;
+            object-fit: cover;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #334155;
+            transition: .4s; border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute; content: "";
+            height: 14px; width: 14px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .4s; border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent-color); }
+        input:checked + .slider:before { transform: translateX(16px); }
+
+        .panel-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .panel-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        #map {
+            width: 100%;
+            height: 220px;
+            border-radius: 6px;
+            margin-top: 10px;
+        }
+
+        .ad-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .ad-box {
+            background: #0a0e17;
+            border: 1px dashed #334155;
+            min-height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 5px;
+            border-radius: 6px;
+        }
+
+        footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #05070e;
+            border-top: 2px solid var(--accent-color);
+            padding: 12px 20px;
+            text-align: center;
+            z-index: 9999;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.5);
+        }
+
+        .footer-text {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .footer-text span {
+            color: var(--accent-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--accent-color);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        textarea {
+            width: 100%;
+            height: 65px;
+            background: #070a12;
+            color: #00f2fe;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            padding: 8px;
+            font-family: monospace;
+            font-size: 12px;
+            margin-bottom: 10px;
+        }
+
+        .offline-badge {
+            display: none;
+            background: #ff4757;
+            color: #fff;
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 <body>
 
     <header>
         <div class="brand">DRIVEVISION AI <span style="font-size: 12px; color: #888;">v18.0</span></div>
-        
         <div class="nav-tools">
             <span id="deviceStats" style="font-size: 12px; color: #aaa;">Total: 100 | Online: 10 | Offline: 90</span>
             <span id="offlineNotice" class="offline-badge">OFFLINE RECORDING ACTIVE</span>
@@ -32,8 +271,6 @@
     </header>
 
     <div class="container">
-        
-        <!-- Cameras Grid -->
         <div class="camera-grid">
             <div class="cam-box" id="box1">
                 <div class="cam-header">
@@ -80,7 +317,6 @@
             </div>
         </div>
 
-        <!-- 4 Ad Banner Slots -->
         <div class="ad-container">
             <div class="ad-box" id="adSlot1"><span style="color:#555;">Ad Slot 1</span></div>
             <div class="ad-box" id="adSlot2"><span style="color:#555;">Ad Slot 2</span></div>
@@ -88,7 +324,6 @@
             <div class="ad-box" id="adSlot4"><span style="color:#555;">Ad Slot 4</span></div>
         </div>
 
-        <!-- Lower Panels -->
         <div class="panel-grid">
             <div class="panel-card">
                 <h3>Live Tracking Monitor (ALPR & Speed)</h3>
@@ -105,14 +340,12 @@
                 <div id="map"></div>
             </div>
         </div>
-
     </div>
 
     <!-- Admin Panel Modal -->
     <div id="adminModal" class="modal">
         <div class="modal-content">
             <h2 style="color: var(--accent-color); margin-bottom: 15px;">Admin Control Panel</h2>
-            
             <h4>Custom Ad Management (Paste HTML / JS)</h4>
             <label style="font-size: 12px;">Ad Slot 1 Code:</label>
             <textarea id="ad1Input" placeholder="Paste HTML / JS Code here..."></textarea>
@@ -131,7 +364,7 @@
         </div>
     </div>
 
-    <!-- Auth Modal (Login / Register / Forgot Password) -->
+    <!-- Auth Modal -->
     <div id="authModal" class="modal">
         <div class="modal-content">
             <h3 style="color: var(--accent-color); margin-bottom: 15px;" id="authTitle">User Authentication</h3>
@@ -145,17 +378,253 @@
         </div>
     </div>
 
-    <!-- Fixed Footer -->
     <footer>
         <div class="footer-text">
             Developer: <span>Mohammad Billal Hossain Shakil</span> | Address: <span>Bangladesh</span>
         </div>
     </footer>
 
-    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Custom JS File -->
-    <script src="script.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
+            authDomain: "road-traffic-data-8aec1.firebaseapp.com",
+            databaseURL: "https://road-traffic-data-8aec1-default-rtdb.firebaseio.com",
+            projectId: "road-traffic-data-8aec1",
+            storageBucket: "road-traffic-data-8aec1.firebasestorage.app",
+            messagingSenderId: "714117386299",
+            appId: "1:714117386299:web:501fc2a8ac89a627af0c1e",
+            measurementId: "G-CEMEBF2DN5"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const ADMIN_EMAIL = "smshakilco@gmail.com";
+
+        auth.onAuthStateChanged(user => {
+            const authBtn = document.getElementById('authBtn');
+            const adminBtn = document.getElementById('adminBtn');
+
+            if (user) {
+                authBtn.innerText = "Logout (" + user.email.split('@')[0] + ")";
+                authBtn.onclick = () => auth.signOut();
+                
+                if (user.email === ADMIN_EMAIL) {
+                    adminBtn.style.display = "inline-block";
+                } else {
+                    adminBtn.style.display = "none";
+                }
+            } else {
+                authBtn.innerText = "Login / Register";
+                authBtn.onclick = () => openAuthModal();
+                adminBtn.style.display = "none";
+            }
+        });
+
+        function openAuthModal() {
+            document.getElementById('authModal').style.display = 'flex';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').style.display = 'none';
+        }
+
+        function submitLogin() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            auth.signInWithEmailAndPassword(email, password)
+                .then(() => closeAuthModal())
+                .catch(err => alert("Login Error: " + err.message));
+        }
+
+        function submitRegister() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            auth.createUserWithEmailAndPassword(email, password)
+                .then(() => {
+                    alert("Registration Successful!");
+                    closeAuthModal();
+                })
+                .catch(err => alert("Registration Error: " + err.message));
+        }
+
+        function submitForgotPassword() {
+            const email = document.getElementById('authEmail').value;
+            if (!email) {
+                alert("Please enter your email to reset password.");
+                return;
+            }
+            auth.sendPasswordResetEmail(email)
+                .then(() => alert("Password reset link / OTP has been sent to your email."))
+                .catch(err => alert("Error: " + err.message));
+        }
+
+        async function testRearCam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: { exact: "environment" } }
+                });
+                document.getElementById('video1').srcObject = stream;
+            } catch (err) {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                document.getElementById('video1').srcObject = stream;
+            }
+        }
+
+        function toggleCam(id, isChecked) {
+            const videoElem = document.getElementById(`video${id}`);
+            if (!isChecked && videoElem.srcObject) {
+                videoElem.srcObject.getTracks().forEach(track => track.stop());
+                videoElem.srcObject = null;
+            } else if (isChecked) {
+                testRearCam();
+            }
+        }
+
+        let map, marker, watchId;
+        
+        function initMap() {
+            map = L.map('map').setView([21.4858, 39.1925], 15);
+
+            L.tileLayer('http://{s}.google.com/vt/lyrs=s,h&x={x}&y={y}&z={z}', {
+                maxZoom: 20,
+                subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+                attribution: 'Map data &copy; Google Satellite'
+            }).addTo(map);
+
+            marker = L.marker([21.4858, 39.1925]).addTo(map).bindPopup('Vehicle Location');
+            startGPS();
+        }
+
+        function startGPS() {
+            if (navigator.geolocation) {
+                watchId = navigator.geolocation.watchPosition(pos => {
+                    const latlng = [pos.coords.latitude, pos.coords.longitude];
+                    marker.setLatLng(latlng);
+                    map.panTo(latlng);
+                }, err => console.log(err), { enableHighAccuracy: true });
+            }
+        }
+
+        function toggleGPS() {
+            if (watchId) {
+                navigator.geolocation.clearWatch(watchId);
+                watchId = null;
+                alert("GPS Tracking Paused");
+            } else {
+                startGPS();
+                alert("GPS Tracking Activated");
+            }
+        }
+
+        window.onload = function() {
+            initMap();
+            loadAdSettings();
+        };
+
+        let mediaRecorder;
+        let recordedChunks = [];
+
+        window.addEventListener('offline', () => {
+            document.getElementById('offlineNotice').style.display = 'inline-block';
+        });
+
+        window.addEventListener('online', () => {
+            document.getElementById('offlineNotice').style.display = 'none';
+        });
+
+        function startGridRecording() {
+            const video1 = document.getElementById('video1');
+            if (!video1.srcObject) {
+                alert("Please turn on Rear Cam to test recording.");
+                return;
+            }
+
+            const stream = video1.srcObject;
+            mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm' });
+            recordedChunks = [];
+
+            mediaRecorder.ondataavailable = e => {
+                if (e.data.size > 0) recordedChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(recordedChunks, { type: 'video/webm' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = url;
+                a.download = `DriveVision_Recording_${Date.now()}.webm`;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => URL.revokeObjectURL(url), 100);
+            };
+
+            mediaRecorder.start();
+            alert("Recording Started! Stopping and Downloading in 5 seconds...");
+            setTimeout(() => mediaRecorder.stop(), 5000);
+        }
+
+        function toggleAdminPanel() {
+            const modal = document.getElementById('adminModal');
+            modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        function saveAdSettings() {
+            const ad1 = document.getElementById('ad1Input').value;
+            const ad2 = document.getElementById('ad2Input').value;
+            const ad3 = document.getElementById('ad3Input').value;
+            const ad4 = document.getElementById('ad4Input').value;
+
+            const ads = { ad1, ad2, ad3, ad4 };
+            localStorage.setItem('drivevision_ads', JSON.stringify(ads));
+
+            if (auth.currentUser && auth.currentUser.email === ADMIN_EMAIL) {
+                db.ref('ads').set(ads);
+            }
+
+            renderAds(ads);
+            toggleAdminPanel();
+            alert("Ads Updated Successfully!");
+        }
+
+        function loadAdSettings() {
+            const savedAds = localStorage.getItem('drivevision_ads');
+            if (savedAds) {
+                renderAds(JSON.parse(savedAds));
+            } else {
+                db.ref('ads').once('value', snapshot => {
+                    if (snapshot.exists()) renderAds(snapshot.val());
+                });
+            }
+        }
+
+        function renderAds(ads) {
+            if (ads.ad1) executeAdScript('adSlot1', ads.ad1);
+            if (ads.ad2) executeAdScript('adSlot2', ads.ad2);
+            if (ads.ad3) executeAdScript('adSlot3', ads.ad3);
+            if (ads.ad4) executeAdScript('adSlot4', ads.ad4);
+        }
+
+        function executeAdScript(slotId, code) {
+            const slot = document.getElementById(slotId);
+            slot.innerHTML = code;
+            
+            const scripts = slot.getElementsByTagName('script');
+            for (let script of scripts) {
+                const newScript = document.createElement('script');
+                if (script.src) {
+                    newScript.src = script.src;
+                } else {
+                    newScript.text = script.innerHTML;
+                }
+                document.body.appendChild(newScript);
+            }
+        }
+    </script>
 </body>
-</html>
+    </html>
