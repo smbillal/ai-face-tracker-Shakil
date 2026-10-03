@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveVision AI Dashboard - Fully Integrated</title>
+    <title>DriveVision AI Dashboard - Full Control</title>
     
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS for Satellite Map -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
     <!-- Firebase SDKs -->
@@ -18,25 +18,18 @@
             --bg-dark: #030712;
             --panel-bg: #0b1329;
             --accent-cyan: #00f2fe;
-            --accent-blue: #0284c7;
             --border-color: #1e293b;
             --text-color: #e2e8f0;
-            --success-color: #10b981;
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-color); padding-bottom: 60px; overflow-x: hidden; }
 
-        /* Header Navigation */
+        /* Navigation Header */
         header {
-            background: #050a18;
-            padding: 8px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border-color);
-            flex-wrap: wrap;
-            gap: 10px;
+            background: #050a18; padding: 8px 15px; display: flex;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap; gap: 10px;
         }
 
         .brand-title { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: 1px; }
@@ -51,13 +44,14 @@
 
         .user-card {
             background: #064e3b; color: #34d399; border: 1px solid #059669;
-            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold;
+            padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer;
         }
 
-        /* Controls Toolbar */
+        /* Toolbar Controls */
         .toolbar {
             background: #070f23; padding: 6px 15px; display: flex;
-            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 6px;
+            justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);
+            flex-wrap: wrap; gap: 6px;
         }
         .ctrl-btn {
             background: #111c35; color: var(--accent-cyan); border: 1px solid #1e293b;
@@ -78,7 +72,8 @@
 
         .cam-card {
             background: var(--panel-bg); border: 1px solid var(--border-color);
-            border-radius: 4px; overflow: hidden; position: relative; min-height: 200px;
+            border-radius: 4px; overflow: hidden; position: relative; min-height: 220px;
+            display: flex; flex-direction: column; justify-content: space-between;
         }
         .cam-header {
             background: #070e20; padding: 5px 8px; display: flex;
@@ -88,21 +83,31 @@
         .badge-offline { background: #991b1b; color: #fca5a5; }
         .badge-online { background: #065f46; color: #a7f3d0; }
 
-        .video-wrapper { position: relative; width: 100%; height: 170px; background: #000; display: flex; align-items: center; justify-content: center; }
+        .video-wrapper { position: relative; width: 100%; height: 160px; background: #000; display: flex; align-items: center; justify-content: center; }
         .video-wrapper video { width: 100%; height: 100%; object-fit: cover; }
-        .cam-placeholder { position: absolute; text-align: center; color: #475569; font-size: 11px; }
+        .cam-placeholder { position: absolute; text-align: center; color: #475569; font-size: 11px; padding: 5px; }
 
         .grid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 5; }
 
-        /* Dashboard Panels */
+        /* Individual Box Connection Bar */
+        .cam-control-bar {
+            background: #060c1c; padding: 4px 6px; display: flex; justify-content: space-between;
+            align-items: center; border-top: 1px solid var(--border-color); gap: 4px;
+        }
+        .cam-select {
+            background: #0f172a; color: var(--accent-cyan); border: 1px solid #1e293b;
+            font-size: 10px; padding: 3px 5px; border-radius: 3px; width: 100%;
+        }
+
+        /* Dashboard Lower Panels */
         .dashboard-panels { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
         @media (max-width: 768px) { .dashboard-panels { grid-template-columns: 1fr; } }
         .panel-box { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 4px; padding: 10px; }
         .panel-header { display: flex; justify-content: space-between; font-size: 12px; color: var(--accent-cyan); margin-bottom: 6px; border-bottom: 1px solid var(--border-color); padding-bottom: 4px; }
         
-        .alpr-list { font-family: monospace; font-size: 11px; max-height: 140px; overflow-y: auto; }
+        .alpr-list { font-family: monospace; font-size: 11px; max-height: 130px; overflow-y: auto; }
         .alpr-item { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dashed #1e293b; }
-        #map { width: 100%; height: 140px; border-radius: 4px; }
+        #map { width: 100%; height: 130px; border-radius: 4px; }
 
         /* Footer */
         footer { position: fixed; bottom: 0; left: 0; width: 100%; background: #020610; border-top: 1px solid var(--accent-cyan); padding: 6px; text-align: center; font-size: 11px; z-index: 9999; }
@@ -119,13 +124,13 @@
 </head>
 <body>
 
-    <!-- Header Navigation -->
+    <!-- Top Navigation Header -->
     <header>
         <div class="brand-title">🛡️ DRIVEVISION <span>AI v18.0</span></div>
         <div class="nav-tools">
             <button class="nav-btn active">Dashboard</button>
             <button class="nav-btn" onclick="openModal('authModal')">Login / Register</button>
-            <div id="userProfileBadge" class="user-card">Guest Mode</div>
+            <div id="userProfileBadge" class="user-card" onclick="openModal('authModal')">Guest Mode (Click to Login)</div>
         </div>
     </header>
 
@@ -138,7 +143,7 @@
             <button class="ctrl-btn active" onclick="setGridBox(4)">4 Boxes</button>
         </div>
         <div style="display: flex; gap: 4px;">
-            <button class="ctrl-btn" onclick="autoConnectActionCamera()">📷 Auto Connect 4K Cam</button>
+            <button class="ctrl-btn" onclick="openWiFiCamModal()">📡 Connect 4K ActionCam</button>
             <button class="ctrl-btn btn-yellow" onclick="exportData('csv')">📄 CSV Export</button>
             <button class="ctrl-btn btn-yellow" onclick="exportData('xml')">📑 XML Export</button>
         </div>
@@ -155,13 +160,20 @@
                     <span id="badge1" class="badge-status badge-offline">OFFLINE</span>
                 </div>
                 <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph1">🎥 AUTO CONNECTING ACTION CAM...</div>
+                    <div class="cam-placeholder" id="ph1">🎥 CAMERA DISCONNECTED</div>
                     <video id="video1" autoplay playsinline muted></video>
                     <svg class="grid-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <line x1="20" y1="90" x2="35" y2="50" stroke="#ef4444" stroke-width="1.5" />
                         <line x1="80" y1="90" x2="65" y2="50" stroke="#ef4444" stroke-width="1.5" />
                         <line x1="30" y1="75" x2="70" y2="75" stroke="#eab308" stroke-width="1.5" />
                     </svg>
+                </div>
+                <div class="cam-control-bar">
+                    <select class="cam-select" onchange="handleCamSelect(1, this.value)">
+                        <option value="none">-- Select Camera Input --</option>
+                        <option value="otg">🔌 Type-C OTG / USB Camera</option>
+                        <option value="wificam">📡 WiFi Action Camera (IP/RTSP)</option>
+                    </select>
                 </div>
             </div>
 
@@ -172,12 +184,19 @@
                     <span id="badge2" class="badge-status badge-offline">OFFLINE</span>
                 </div>
                 <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph2">🎥 SEARCHING USB / WIFI CAM...</div>
+                    <div class="cam-placeholder" id="ph2">🎥 CAMERA DISCONNECTED</div>
                     <video id="video2" autoplay playsinline muted></video>
                     <svg class="grid-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
                         <line x1="15" y1="95" x2="30" y2="55" stroke="#38bdf8" stroke-width="1.5" />
                         <line x1="85" y1="95" x2="70" y2="55" stroke="#38bdf8" stroke-width="1.5" />
                     </svg>
+                </div>
+                <div class="cam-control-bar">
+                    <select class="cam-select" onchange="handleCamSelect(2, this.value)">
+                        <option value="none">-- Select Camera Input --</option>
+                        <option value="otg">🔌 USB / Rear Camera</option>
+                        <option value="wificam">📡 WiFi Action Camera (IP/RTSP)</option>
+                    </select>
                 </div>
             </div>
 
@@ -188,8 +207,15 @@
                     <span id="badge3" class="badge-status badge-offline">OFFLINE</span>
                 </div>
                 <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph3">🎥 WAITING FOR STREAM</div>
+                    <div class="cam-placeholder" id="ph3">🎥 CAMERA DISCONNECTED</div>
                     <video id="video3" autoplay playsinline muted></video>
+                </div>
+                <div class="cam-control-bar">
+                    <select class="cam-select" onchange="handleCamSelect(3, this.value)">
+                        <option value="none">-- Select Camera Input --</option>
+                        <option value="otg">🔌 USB / Left Cam</option>
+                        <option value="wificam">📡 WiFi IP Camera</option>
+                    </select>
                 </div>
             </div>
 
@@ -200,8 +226,15 @@
                     <span id="badge4" class="badge-status badge-offline">OFFLINE</span>
                 </div>
                 <div class="video-wrapper">
-                    <div class="cam-placeholder" id="ph4">🎥 WAITING FOR STREAM</div>
+                    <div class="cam-placeholder" id="ph4">🎥 CAMERA DISCONNECTED</div>
                     <video id="video4" autoplay playsinline muted></video>
+                </div>
+                <div class="cam-control-bar">
+                    <select class="cam-select" onchange="handleCamSelect(4, this.value)">
+                        <option value="none">-- Select Camera Input --</option>
+                        <option value="otg">🔌 USB / Right Cam</option>
+                        <option value="wificam">📡 WiFi IP Camera</option>
+                    </select>
                 </div>
             </div>
 
@@ -230,20 +263,42 @@
         </div>
     </div>
 
-    <!-- Auth & Registration Modal -->
+    <!-- WiFi Action Camera Setup Modal -->
+    <div id="wifiCamModal" class="modal">
+        <div class="modal-body">
+            <h3 style="color: var(--accent-cyan); margin-bottom: 10px;">📡 WiFi Action Cam (ActionCam_341736cf1448)</h3>
+            <div class="form-group">
+                <label>Select Camera Box:</label>
+                <select id="targetCamSlot">
+                    <option value="1">Cam 1 (Front)</option>
+                    <option value="2">Cam 2 (Rear)</option>
+                    <option value="3">Cam 3 (Left)</option>
+                    <option value="4">Cam 4 (Right)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Action Camera IP / Stream URL:</label>
+                <input type="text" id="actionCamUrl" value="http://192.168.1.1:8080/live" placeholder="e.g. http://192.168.1.1:8080/live or rtsp://...">
+            </div>
+            <button class="ctrl-btn" style="width: 100%; background: #0284c7; color:#fff;" onclick="connectWiFiActionCam()">Connect WiFi Cam</button>
+            <button class="ctrl-btn" style="width: 100%; margin-top: 5px; background: #334155; color:#fff;" onclick="closeModal('wifiCamModal')">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Auth Modal (Login / Registration with 5-Digit Unique ID) -->
     <div id="authModal" class="modal">
         <div class="modal-body">
             <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                 <button class="ctrl-btn active" id="tabLoginBtn" onclick="switchAuthTab('login')">Login</button>
                 <button class="ctrl-btn" id="tabRegBtn" onclick="switchAuthTab('reg')">Register Account</button>
-                <button class="ctrl-btn" id="tabForgotBtn" onclick="switchAuthTab('forgot')">Reset Password/OTP</button>
+                <button class="ctrl-btn" id="tabForgotBtn" onclick="switchAuthTab('forgot')">Forgot Password / OTP</button>
             </div>
 
-            <!-- Login Section -->
+            <!-- Login Form -->
             <div id="loginForm">
                 <div class="form-group">
                     <label>Email Address:</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                    <input type="email" id="loginEmail" placeholder="Enter email">
                 </div>
                 <div class="form-group">
                     <label>Password:</label>
@@ -252,7 +307,7 @@
                 <button class="ctrl-btn" style="width: 100%; margin-top: 5px;" onclick="executeLogin()">Login Account</button>
             </div>
 
-            <!-- Registration Section with Name, Mobile, Country & 5-Digit Unique ID -->
+            <!-- Registration Form -->
             <div id="regForm" style="display: none;">
                 <div class="form-group">
                     <label>Full Name:</label>
@@ -279,16 +334,16 @@
                         <option value="USA">United States</option>
                     </select>
                 </div>
-                <button class="ctrl-btn" style="width: 100%; background: #10b981; color:#fff;" onclick="executeRegister()">Create Account (Auto 5-Digit ID)</button>
+                <button class="ctrl-btn" style="width: 100%; background: #10b981; color:#fff;" onclick="executeRegister()">Register (Generates 5-Digit ID)</button>
             </div>
 
-            <!-- Forgot Password / OTP Section -->
+            <!-- Forgot Password OTP Form -->
             <div id="forgotForm" style="display: none;">
                 <div class="form-group">
-                    <label>Enter Registered Email:</label>
-                    <input type="email" id="forgotEmail" placeholder="Enter email for OTP / Reset Link">
+                    <label>Registered Email:</label>
+                    <input type="email" id="forgotEmail" placeholder="Enter registered email">
                 </div>
-                <button class="ctrl-btn" style="width: 100%; background: #eab308; color:#000;" onclick="sendPasswordOTP()">Send Password Reset Link / OTP</button>
+                <button class="ctrl-btn" style="width: 100%; background: #eab308; color:#000;" onclick="sendPasswordOTP()">Send Password Reset / OTP</button>
             </div>
 
             <button class="ctrl-btn" style="width: 100%; margin-top: 10px; background: #334155; color:#fff;" onclick="closeModal('authModal')">Close</button>
@@ -304,7 +359,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // Firebase Config
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBrSa3hbt7kJTPddCPfdlzGiS3rTVWbgBg",
             authDomain: "road-traffic-data-8aec1.firebaseapp.com",
@@ -320,28 +375,26 @@
         const auth = firebase.auth();
         const db = firebase.database();
 
-        // Check Auth State & Show Unique 5-Digit ID
+        // Track Auth & Display Unique 5-Digit User ID
         auth.onAuthStateChanged(user => {
             if (user) {
                 db.ref('users/' + user.uid).once('value', snapshot => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        document.getElementById('userProfileBadge').innerText = `${data.name} | ID: ${data.userId}`;
+                        document.getElementById('userProfileBadge').innerText = `👤 ${data.name} | ID: ${data.userId}`;
                     } else {
-                        document.getElementById('userProfileBadge').innerText = `${user.email.split('@')[0]}`;
+                        document.getElementById('userProfileBadge').innerText = `👤 User: ${user.email.split('@')[0]}`;
                     }
                 });
             } else {
-                document.getElementById('userProfileBadge').innerText = "Guest Mode";
+                document.getElementById('userProfileBadge').innerText = "Guest Mode (Click to Login)";
             }
         });
 
-        // Generate Random 5-Digit ID
-        function generate5DigitID() {
-            return Math.floor(10000 + Math.random() * 90000);
-        }
+        // Generate 5-Digit Unique ID
+        function generate5DigitID() { return Math.floor(10000 + Math.random() * 90000); }
 
-        // Register Account Logic
+        // User Registration
         function executeRegister() {
             const name = document.getElementById('regName').value;
             const mobile = document.getElementById('regMobile').value;
@@ -350,7 +403,7 @@
             const country = document.getElementById('regCountry').value;
 
             if(!name || !mobile || !email || !password) {
-                alert("সবগুলো তথ্য সঠিকভাবে পূরণ করুন!");
+                alert("দয়া করে সমস্ত ফিল্ড সঠিকভাবে পূরণ করুন!");
                 return;
             }
 
@@ -358,13 +411,8 @@
 
             auth.createUserWithEmailAndPassword(email, password)
                 .then(cred => {
-                    // Save user data to Firebase Realtime Database
                     return db.ref('users/' + cred.user.uid).set({
-                        userId: uniqueID,
-                        name: name,
-                        mobile: mobile,
-                        email: email,
-                        country: country
+                        userId: uniqueID, name: name, mobile: mobile, email: email, country: country
                     });
                 })
                 .then(() => {
@@ -374,48 +422,70 @@
                 .catch(err => alert("Error: " + err.message));
         }
 
-        // Login Logic
+        // User Login
         function executeLogin() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
 
             auth.signInWithEmailAndPassword(email, password)
                 .then(() => closeModal('authModal'))
-                .catch(err => alert("পাসওয়ার্ড বা ইমেইল ভুল হয়েছে! " + err.message));
+                .catch(err => alert("পাসওয়ার্ড বা ইমেইল ভুল! " + err.message));
         }
 
-        // Forgot Password OTP / Reset Link Logic
+        // Password Reset OTP
         function sendPasswordOTP() {
             const email = document.getElementById('forgotEmail').value;
-            if(!email) { alert("ইমেইল অ্যাড্রেস লিখুন!"); return; }
+            if(!email) { alert("ইমেইল আইডি লিখুন!"); return; }
 
             auth.sendPasswordResetEmail(email)
                 .then(() => {
-                    alert("আপনার ইমেইলে পাসওয়ার্ড রিসেট করার নিরাপদ ওটিপি লিংক পাঠানো হয়েছে।");
+                    alert("আপনার ইমেইলে ওটিপি লিংক পাঠানো হয়েছে।");
                     closeModal('authModal');
                 })
                 .catch(err => alert("Error: " + err.message));
         }
 
-        // 4K Action Camera Auto-Connect Feature (USB OTG & WiFi)
-        async function autoConnectActionCamera() {
-            try {
-                // Request camera permission and stream OTG 4K Action Camera
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { width: { ideal: 3840 }, height: { ideal: 2160 }, facingMode: "environment" }
-                });
-
-                const v1 = document.getElementById('video1');
-                v1.srcObject = stream;
-                document.getElementById('ph1').style.display = 'none';
-                document.getElementById('badge1').className = 'badge-status badge-online';
-                document.getElementById('badge1').innerText = 'ONLINE (4K ACTION CAM)';
-            } catch (err) {
-                console.log("OTG Camera Auto-Connect failed, checking external devices...", err);
+        // Camera Source Selection Handler
+        function handleCamSelect(slot, type) {
+            if (type === 'otg') {
+                connectOTGCam(slot);
+            } else if (type === 'wificam') {
+                document.getElementById('targetCamSlot').value = slot;
+                openModal('wifiCamModal');
             }
         }
 
-        // Switch Tabs inside Auth Modal
+        // Connect USB/OTG Camera
+        async function connectOTGCam(slot) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.getElementById(`video${slot}`);
+                video.srcObject = stream;
+                document.getElementById(`ph${slot}`).style.display = 'none';
+                document.getElementById(`badge${slot}`).className = 'badge-status badge-online';
+                document.getElementById(`badge${slot}`).innerText = 'ONLINE (USB/OTG)';
+            } catch (err) {
+                alert(`Slot ${slot} Camera Error: ` + err.message);
+            }
+        }
+
+        // Open WiFi Action Camera Setup Modal
+        function openWiFiCamModal() {
+            openModal('wifiCamModal');
+        }
+
+        // Connect WiFi Action Camera Stream
+        function connectWiFiActionCam() {
+            const slot = document.getElementById('targetCamSlot').value;
+            const url = document.getElementById('actionCamUrl').value;
+
+            const ph = document.getElementById(`ph${slot}`);
+            ph.innerHTML = `📡 4K ActionCam Stream Active:<br><span style="color:#00f2fe; font-size:10px;">${url}</span>`;
+            document.getElementById(`badge${slot}`).className = 'badge-status badge-online';
+            document.getElementById(`badge${slot}`).innerText = 'ONLINE (WiFi 4K Cam)';
+            closeModal('wifiCamModal');
+        }
+
         function switchAuthTab(tab) {
             document.getElementById('loginForm').style.display = tab === 'login' ? 'block' : 'none';
             document.getElementById('regForm').style.display = tab === 'reg' ? 'block' : 'none';
@@ -435,7 +505,7 @@
             a.click();
         }
 
-        // Satellite GPS Map
+        // Satellite GPS Map Setup
         let map;
         function initMap() {
             map = L.map('map').setView([21.4858, 39.1925], 14);
@@ -446,11 +516,9 @@
         function openModal(id) { document.getElementById(id).style.display = 'flex'; }
         function closeModal(id) { document.getElementById(id).style.display = 'none'; }
 
-        // Window Load Trigger (Auto-connects Camera)
         window.onload = function() {
             initMap();
-            autoConnectActionCamera(); // অটোমেটিক ক্যামেরা কানেক্ট করবে
         };
     </script>
 </body>
-    </html>
+                            </html>
