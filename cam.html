@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActionCam Auto-Connect Panel</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #030712; color: #f3f4f6; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 15px; }
+        
+        .panel-card { background: #0b1329; border: 1px solid #1e293b; border-radius: 12px; width: 100%; max-width: 500px; padding: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #1e293b; padding-bottom: 10px; }
+        .title { font-size: 16px; font-weight: bold; color: #00f2fe; }
+        
+        .status-badge { font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: bold; text-transform: uppercase; }
+        .status-scanning { background: #854d0e; color: #fef08a; }
+        .status-connected { background: #065f46; color: #a7f3d0; }
+        .status-failed { background: #991b1b; color: #fca5a5; }
+
+        .video-box { width: 100%; height: 280px; background: #000; border-radius: 8px; overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid #1e293b; }
+        .video-box img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .loader-text { font-size: 13px; color: #94a3b8; text-align: center; }
+
+        .info-box { margin-top: 15px; background: #070e20; padding: 10px; border-radius: 6px; font-size: 12px; color: #cbd5e1; border: 1px solid #1e293b; }
+        .info-item { display: flex; justify-content: space-between; margin-bottom: 5px; }
+        .info-item:last-child { margin-bottom: 0; }
+        .btn-retry { width: 100%; margin-top: 12px; padding: 10px; background: #0284c7; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .btn-retry:hover { background: #0369a1; }
+    </style>
+</head>
+<body>
+
+    <div class="panel-card">
+        <div class="header">
+            <div class="title">📷 ActionCam Streamer</div>
+            <div id="statusBadge" class="status-badge status-scanning">Scanning...</div>
+        </div>
+
+        <div class="video-box">
+            <div id="loader" class="loader-text">
+                <p>🔍 Scanning WiFi Camera (192.168.100.1)...</p>
+                <p style="font-size: 10px; margin-top: 5px; color: #64748b;">Please ensure ActionCam WiFi is connected.</p>
+            </div>
+            <img id="streamImg" alt="Live Camera Feed" />
+        </div>
+
+        <div class="info-box">
+            <div class="info-item"><span>Target Gateway:</span> <strong>192.168.100.1</strong></div>
+            <div class="info-item"><span>Active Stream URL:</span> <strong id="activeUrl">Searching...</strong></div>
+        </div>
+
+        <button class="btn-retry" onclick="startAutoScan()">🔄 Re-Scan Camera</button>
+    </div>
+
+    <script>
+        // Common ActionCam stream paths for 192.168.100.1
+        const streamPaths = [
+            "http://192.168.100.1:8080/?action=stream",
+            "http://192.168.100.1:8080",
+            "http://192.168.100.1:80/live",
+            "http://192.168.100.1:8000",
+            "http://192.168.100.1/mjpeg"
+        ];
+
+        let currentTestIndex = 0;
+        const img = document.getElementById('streamImg');
+        const loader = document.getElementById('loader');
+        const badge = document.getElementById('statusBadge');
+        const activeUrlText = document.getElementById('activeUrl');
+
+        function startAutoScan() {
+            currentTestIndex = 0;
+            badge.className = "status-badge status-scanning";
+            badge.innerText = "Scanning...";
+            loader.style.display = "block";
+            img.style.display = "none";
+            activeUrlText.innerText = "Testing endpoints...";
+            testNextUrl();
+        }
+
+        function testNextUrl() {
+            if (currentTestIndex >= streamPaths.length) {
+                badge.className = "status-badge status-failed";
+                badge.innerText = "Connection Failed";
+                loader.innerHTML = "❌ Camera Stream Not Found.<br><small style='color:#ef4444'>Check HTTPS/Insecure Setting in Chrome.</small>";
+                activeUrlText.innerText = "None";
+                return;
+            }
+
+            const testUrl = streamPaths[currentTestIndex];
+            activeUrlText.innerText = testUrl;
+
+            // Try loading stream into image element
+            img.src = testUrl + "?t=" + new Date().getTime(); // Anti-cache query
+
+            img.onload = function() {
+                // Connection Successful
+                badge.className = "status-badge status-connected";
+                badge.innerText = "ONLINE";
+                loader.style.display = "none";
+                img.style.display = "block";
+            };
+
+            img.onerror = function() {
+                // If this URL fails, test the next one after a short delay
+                currentTestIndex++;
+                setTimeout(testNextUrl, 500);
+            };
+        }
+
+        // Auto Run on Page Load
+        window.onload = startAutoScan;
+    </script>
+
+</body>
+</html>
